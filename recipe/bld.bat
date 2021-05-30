@@ -10,6 +10,8 @@ call colcon build --merge-install --install-base="%PREFIX%\opt\tesseract_robotic
    -DTESSERACT_ENABLE_CLANG_TIDY=OFF ^
    -DTESSERACT_ENABLE_CODE_COVERAGE=OFF
 
+if %errorlevel% neq 0 exit /b %errorlevel%
+
 setlocal EnableDelayedExpansion
 
 :: Copy the [de]activate scripts to %PREFIX%\etc\conda\[de]activate.d.
@@ -18,3 +20,5 @@ for %%F in (activate deactivate) DO (
     if not exist %PREFIX%\etc\conda\%%F.d mkdir %PREFIX%\etc\conda\%%F.d
     copy %RECIPE_DIR%\%%F.bat %PREFIX%\etc\conda\%%F.d\%PKG_NAME%_%%F.bat
 )
+
+if %errorlevel% neq 0 exit /b %errorlevel%
