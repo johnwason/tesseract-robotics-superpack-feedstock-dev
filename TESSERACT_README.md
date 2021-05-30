@@ -14,14 +14,15 @@ This package makes the `tesseract_robotics` Python packages available for import
 
 The build products of the following repositories are included in the superpack:
 
-https://github.com/ros-industrial/ros_industrial_cmake_boilerplate
-https://github.com/Jmeyer1292/opw_kinematics
-https://github.com/ethz-adrl/ifopt
-https://github.com/swri-robotics/descartes_light
-https://github.com/ros-industrial-consortium/trajopt_ros
-https://github.com/ros-industrial-consortium/tesseract
-https://github.com/ros-industrial-consortium/tesseract_planning
-https://github.com/ros-industrial-consortium/tesseract_python
+* https://github.com/ros-industrial/ros_industrial_cmake_boilerplate
+* https://github.com/Jmeyer1292/opw_kinematics
+* https://github.com/ethz-adrl/ifopt
+* https://github.com/swri-robotics/descartes_light
+* https://github.com/ros-industrial-consortium/trajopt_ros
+* https://github.com/ros-industrial-consortium/tesseract
+* https://github.com/ros-industrial-consortium/tesseract_planning
+* https://github.com/ros-industrial-consortium/tesseract_python
+* https://github.com/ompl/ompl
 
 ### Installation
 
