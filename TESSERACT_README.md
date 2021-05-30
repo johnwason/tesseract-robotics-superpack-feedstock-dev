@@ -29,15 +29,11 @@ Installation requires the installation of `anaconda` or `miniconda`.
 
 To install, first create a conda environment. An existing environment can also be used. The `tesseract-robotics-superpack` package is currently built using Python 3.8. Other versions may work, but mileage may vary.
 
-`conda create -n tesseract-robotics -c conda-forge python=3.8`
+`conda create -n tesseract-robotics -c conda-forge -c robotology -c tesseract-robotics tesseract-robotics-superpack python=3.8`
 
 Activate the environment.
 
 `conda activate tesseract-robotics`
-
-Install `tesseract-robotics-superpack`
-
-`conda install -c conda-forge -c robotology -c tesseract-robotics tesseract-robotics-superpack`
 
 ### Using Tesseract
 
