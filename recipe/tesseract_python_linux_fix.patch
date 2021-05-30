@@ -45,19 +45,30 @@ index 6e370b0..33125ad 100644
    set(PY_MOD_REAL_NAME1 SWIG_MODULE_${PY_MOD_NAME}_REAL_NAME)
    set(PY_MOD_REAL_NAME ${${PY_MOD_REAL_NAME1}})
 diff --git a/tesseract_viewer_python/CMakeLists.txt b/tesseract_viewer_python/CMakeLists.txt
-index b9a476a..dc311f5 100644
+index b9a476a..1d0bdee 100644
 --- a/tesseract_viewer_python/CMakeLists.txt
 +++ b/tesseract_viewer_python/CMakeLists.txt
-@@ -43,9 +43,9 @@ if(SETUPTOOLS_DEB_LAYOUT)
-   set(SETUPTOOLS_ARG_EXTRA "--install-layout=deb")
+@@ -31,7 +31,7 @@ STRING (REGEX REPLACE "<version>([0-9]+\\.[0-9]+\\.[0-9]+)</version>" "\\1" tess
+ STRING (STRIP ${tesseract_viewer_python_version2} tesseract_viewer_python_version)
+ MESSAGE(STATUS "tesseract_viewer_python version: ${tesseract_viewer_python_version}")
+ 
+-configure_file("${CMAKE_CURRENT_SOURCE_DIR}/cmake/setup.py.in" "${CMAKE_CURRENT_BINARY_DIR}/python/setup.py" @ONLY)
++# configure_file("${CMAKE_CURRENT_SOURCE_DIR}/cmake/setup.py.in" "${CMAKE_CURRENT_BINARY_DIR}/python/setup.py" @ONLY)
+ 
+ set(enable_setuptools_deb_layout OFF)
+ if(EXISTS "/etc/debian_version")
+@@ -44,8 +44,8 @@ if(SETUPTOOLS_DEB_LAYOUT)
  endif()
  
--install(CODE "message(STATUS \"Running setup.py in ${CMAKE_CURRENT_SOURCE_DIR}\")
+ install(CODE "message(STATUS \"Running setup.py in ${CMAKE_CURRENT_SOURCE_DIR}\")
 -execute_process(COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/python/setup.py install -f
 ---root=/ --prefix=${CMAKE_INSTALL_PREFIX} ${SETUPTOOLS_ARG_EXTRA} --single-version-externally-managed WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})")
-+install(CODE "message(STATUS \"Running setup.py in ${CMAKE_CURRENT_BINARY_DIR}/python\")
 +  execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install --no-deps
-+  --target=${CMAKE_INSTALL_PREFIX}/lib/python3/dist-packages . WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/python)")
++  --target=${CMAKE_INSTALL_PREFIX}/lib/python3/dist-packages . WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})")
  
    # Allows Colcon to find non-Ament packages when using workspace underlays
    file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/share/ament_index/resource_index/packages/${PROJECT_NAME} "")
+diff --git a/tesseract_viewer_python/cmake/setup.py.in b/tesseract_viewer_python/setup.py
+similarity index 100%
+rename from tesseract_viewer_python/cmake/setup.py.in
+rename to tesseract_viewer_python/setup.py

@@ -1,3 +1,5 @@
+ln -s $PREFIX/bin/x86_64-conda-linux-gnu-gcc $PREFIX/bin/gcc
+
 colcon build --merge-install --install-base="$PREFIX/opt/tesseract_robotics" \
    --cmake-args -DCMAKE_BUILD_TYPE=Release \
    -DBUILD_SHARED_LIBS=ON \

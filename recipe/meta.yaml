@@ -6,6 +6,8 @@ source:
   - git_url: https://github.com/ros-industrial/ros_industrial_cmake_boilerplate.git
     git_rev: 0.2.8
     folder: src/ros_industrial_cmake_boilerplate
+    patches:
+      - ros_industrial_cmake_boilerplate_linux_fix.patch # [linux]
   - git_url: https://github.com/Jmeyer1292/opw_kinematics.git
     folder: src/opw_kinematics
     git_rev: 0.4.0
@@ -70,13 +72,14 @@ requirements:
     - jsoncpp
     - taskflow 
     - swig
-    - python >=3.8
+    - python
     - numpy
     - cmake
     - ninja # [win]
     - make # [linux]
     - {{ compiler('c') }}
     - {{ compiler('cxx') }}
+    - lcov # [linux]
   run:
     - boost-cpp
     - eigen 
@@ -99,8 +102,11 @@ requirements:
     - ompl # [not linux]
     - libode
     - taskflow 
-    - python >=3.8
+    - python
     - numpy
+
+build:
+  skip: true # [py<38]
 
 about:
   home: https://github.com/ros-industrial-consortium/tesseract
