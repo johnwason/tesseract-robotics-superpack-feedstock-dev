@@ -1,0 +1,109 @@
+package:
+  name: tesseract-robotics-superpack
+  version: 0.1.0dev0
+
+source:
+  - git_url: https://github.com/ros-industrial/ros_industrial_cmake_boilerplate.git
+    git_rev: 0.2.8
+    folder: src/ros_industrial_cmake_boilerplate
+  - git_url: https://github.com/Jmeyer1292/opw_kinematics.git
+    folder: src/opw_kinematics
+    git_rev: 0.4.0
+  - git_url: https://github.com/ethz-adrl/ifopt.git
+    folder: src/ifopt
+    git_rev: 27451ce3212d3c0ccd3a0db9a1ee9a9963466674
+  - git_url: https://github.com/swri-robotics/descartes_light.git
+    folder: src/descartes_light
+    git_rev: 0.2.1
+  - git_url: https://github.com/ros-industrial-consortium/trajopt_ros.git
+    folder: src/trajopt_ros
+    git_rev: 9502162d5ca110de9a2dc460156c446ec0d6c626
+    patches:
+      - trajopt_ros_win_fix.patch # [win]
+      - trajopt_ros_linux_fix.patch # [linux]
+  - url: https://github.com/ros-industrial-consortium/tesseract/archive/refs/tags/0.4.1.tar.gz
+    sha256: 08ada3998904250ca36aa5923331cf2ee3486cb36b1780b3484bb723b520a8cd
+    folder: src/tesseract
+    patches:
+      - tesseract_win_fix.patch # [win]
+      - tesseract_linux_fix.patch # [linux]
+  - git_url: https://github.com/johnwason/tesseract_planning.git
+    folder: src/tesseract_planning
+    git_rev: 84ac87f6ebe891ff1c66195b03d1aa92878f9f84
+    patches:
+      - tesseract_planning_win_fix.patch # [win]
+      - tesseract_planning_linux_fix.patch # [linux]
+  - git_url: https://github.com/johnwason/tesseract_python-1.git
+    folder: src/tesseract_python
+    git_rev: 8e80f97db33e814e826c241e02160954a7534050
+    patches:
+      - tesseract_python_win_fix.patch # [win]
+      - tesseract_python_linux_fix.patch # [linux]
+  - url: https://github.com/ompl/ompl/archive/1.5.2.tar.gz # [linux]
+    sha256: db1665dd2163697437ef155668fdde6101109e064a2d1a04148e45b3747d5f98
+    folder: src/ompl
+
+
+requirements:
+  host:
+    - boost-cpp 
+    - colcon-common-extensions 
+    - eigen 
+    - tinyxml2
+    - console_bridge
+    - assimp
+    - urdfdom 
+    - bullet 
+    - fcl
+    - octomap 
+    - orocos-kdl 
+    - pcl
+    - gtest
+    - gmock
+    - pkg-config 
+    - osqp 
+    - osqp-eigen 
+    - xz
+    - ompl # [not linux]
+    - flann
+    - libode
+    - jsoncpp
+    - taskflow 
+    - swig
+    - python >=3.8
+    - numpy
+    - cmake
+    - ninja # [win]
+    - make # [linux]
+    - {{ compiler('c') }}
+    - {{ compiler('cxx') }}
+  run:
+    - boost-cpp
+    - eigen 
+    - tinyxml2
+    - console_bridge
+    - assimp
+    - urdfdom 
+    - bullet 
+    - fcl
+    - octomap 
+    - orocos-kdl 
+    - pcl
+    - gtest
+    - gmock
+    - pkg-config 
+    - osqp 
+    - osqp-eigen 
+    - xz
+    - jsoncpp
+    - ompl # [not linux]
+    - libode
+    - taskflow 
+    - python >=3.8
+    - numpy
+
+about:
+  home: https://github.com/ros-industrial-consortium/tesseract
+  summary: Tesseract robotics motion planning framework
+
+

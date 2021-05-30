@@ -1,0 +1,63 @@
+diff --git a/tesseract_python/CMakeLists.txt b/tesseract_python/CMakeLists.txt
+index 599d7d4..0cf45ed 100644
+--- a/tesseract_python/CMakeLists.txt
++++ b/tesseract_python/CMakeLists.txt
+@@ -36,7 +36,7 @@ find_package(tesseract_scene_graph REQUIRED)
+ find_package(tesseract_command_language REQUIRED)
+ find_package(tesseract_time_parameterization REQUIRED)
+ find_package(tesseract_process_managers REQUIRED)
+-find_package(PCL REQUIRED COMPONENTS core features filters io segmentation surface)
++find_package(PCL REQUIRED COMPONENTS core io)
+ find_package(trajopt REQUIRED)
+ find_package(TinyXML2 REQUIRED)
+ find_package(opw_kinematics REQUIRED)
+@@ -144,15 +144,10 @@ if(SETUPTOOLS_DEB_LAYOUT)
+   set(SETUPTOOLS_ARG_EXTRA "--install-layout=deb")
+ endif()
+ 
+-if (${PYTHON_VERSION_MAJOR} LESS 3)
+-    install(CODE "message(STATUS \"Running setup.py in ${CMAKE_CURRENT_BINARY_DIR}/python\")
+-    execute_process(COMMAND python2 setup.py install -f
+---root=/ --prefix=${CMAKE_INSTALL_PREFIX} ${SETUPTOOLS_ARG_EXTRA} --single-version-externally-managed WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/python)")
+-else()
+-  install(CODE "message(STATUS \"Running setup.py in ${CMAKE_CURRENT_BINARY_DIR}/python\")
+-  execute_process(COMMAND ${PYTHON_EXECUTABLE} setup.py install -f
+-  --root=/ --prefix=${CMAKE_INSTALL_PREFIX} ${SETUPTOOLS_ARG_EXTRA} --single-version-externally-managed WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/python)")
+-endif()
++
++install(CODE "message(STATUS \"Running setup.py in ${CMAKE_CURRENT_BINARY_DIR}/python\")
++  execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install --no-deps
++  --target=${CMAKE_INSTALL_PREFIX}/lib/python3/dist-packages . WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/python)")
+ 
+ 
+   # Allows Colcon to find non-Ament packages when using workspace underlays
+diff --git a/tesseract_python/cmake/tesseract_python_module.cmake b/tesseract_python/cmake/tesseract_python_module.cmake
+index 6e370b0..33125ad 100644
+--- a/tesseract_python/cmake/tesseract_python_module.cmake
++++ b/tesseract_python/cmake/tesseract_python_module.cmake
+@@ -17,7 +17,7 @@ function(tesseract_python_module PY_MOD_NAME )
+   set(SWIG_OUTFILE_DIR ${CMAKE_CURRENT_BINARY_DIR})
+ 
+   swig_add_module(${PY_MOD_NAME} python ${PY_MOD_SWIG_SRCS})
+-  swig_link_libraries(${PY_MOD_NAME} ${PY_MOD_LIBS} jsoncpp_lib ${TinyXML2_LIBRARIES} ${EIGEN3_LIBRARIES} ${PYTHON_LIBRARIES})
++  swig_link_libraries(${PY_MOD_NAME} ${PY_MOD_LIBS} jsoncpp_static ${TinyXML2_LIBRARIES} ${EIGEN3_LIBRARIES} ${PYTHON_LIBRARIES})
+ 
+   set(PY_MOD_REAL_NAME1 SWIG_MODULE_${PY_MOD_NAME}_REAL_NAME)
+   set(PY_MOD_REAL_NAME ${${PY_MOD_REAL_NAME1}})
+diff --git a/tesseract_viewer_python/CMakeLists.txt b/tesseract_viewer_python/CMakeLists.txt
+index b9a476a..dc311f5 100644
+--- a/tesseract_viewer_python/CMakeLists.txt
++++ b/tesseract_viewer_python/CMakeLists.txt
+@@ -43,9 +43,9 @@ if(SETUPTOOLS_DEB_LAYOUT)
+   set(SETUPTOOLS_ARG_EXTRA "--install-layout=deb")
+ endif()
+ 
+-install(CODE "message(STATUS \"Running setup.py in ${CMAKE_CURRENT_SOURCE_DIR}\")
+-execute_process(COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/python/setup.py install -f
+---root=/ --prefix=${CMAKE_INSTALL_PREFIX} ${SETUPTOOLS_ARG_EXTRA} --single-version-externally-managed WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})")
++install(CODE "message(STATUS \"Running setup.py in ${CMAKE_CURRENT_BINARY_DIR}/python\")
++  execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install --no-deps
++  --target=${CMAKE_INSTALL_PREFIX}/lib/python3/dist-packages . WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/python)")
+ 
+   # Allows Colcon to find non-Ament packages when using workspace underlays
+   file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/share/ament_index/resource_index/packages/${PROJECT_NAME} "")

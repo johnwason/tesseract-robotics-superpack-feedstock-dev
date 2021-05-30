@@ -1,0 +1,40 @@
+diff --git a/trajopt/CMakeLists.txt b/trajopt/CMakeLists.txt
+index b849d32..70bb3b6 100644
+--- a/trajopt/CMakeLists.txt
++++ b/trajopt/CMakeLists.txt
+@@ -54,7 +54,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
+     console_bridge::console_bridge
+     Boost::boost
+     Eigen3::Eigen
+-    jsoncpp_lib)
++    jsoncpp_static)
+ target_compile_definitions(${PROJECT_NAME} PUBLIC ${TRAJOPT_COMPILE_DEFINITIONS})
+ target_cxx_version(${PROJECT_NAME} PUBLIC VERSION ${TRAJOPT_CXX_VERSION})
+ target_include_directories(${PROJECT_NAME} PUBLIC
+diff --git a/trajopt_sco/CMakeLists.txt b/trajopt_sco/CMakeLists.txt
+index 373b213..0a8bebb 100644
+--- a/trajopt_sco/CMakeLists.txt
++++ b/trajopt_sco/CMakeLists.txt
+@@ -30,9 +30,10 @@ set(SCO_SOURCE_FILES
+     src/num_diff.cpp
+ )
+ 
+-if (NOT APPLE AND NOT WIN32)
+-  set (HAVE_BPMPD TRUE)
+-endif()
++# if (NOT APPLE AND NOT WIN32)
++#  set (HAVE_BPMPD TRUE)
++# endif()
++set (HAVE_BPMPD FALSE)
+ 
+ if (HAVE_BPMPD)
+   add_executable(bpmpd_caller src/bpmpd_caller.cpp)
+@@ -96,7 +97,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
+   Boost::boost
+   Eigen3::Eigen
+   ${CMAKE_DL_LIBS}
+-  jsoncpp_lib)
++  jsoncpp_static)
+ target_compile_options(${PROJECT_NAME} PRIVATE ${TRAJOPT_COMPILE_OPTIONS_PRIVATE})
+ target_compile_options(${PROJECT_NAME} PUBLIC ${TRAJOPT_COMPILE_OPTIONS_PUBLIC})
+ target_compile_definitions(${PROJECT_NAME} PUBLIC ${TRAJOPT_COMPILE_DEFINITIONS})

@@ -1,0 +1,132 @@
+diff --git a/tesseract_command_language/include/tesseract_command_language/core/instruction.h b/tesseract_command_language/include/tesseract_command_language/core/instruction.h
+index 494fd546e..795cedccf 100644
+--- a/tesseract_command_language/include/tesseract_command_language/core/instruction.h
++++ b/tesseract_command_language/include/tesseract_command_language/core/instruction.h
+@@ -40,6 +40,7 @@ TESSERACT_COMMON_IGNORE_WARNINGS_POP
+ #include <tesseract_command_language/core/waypoint.h>
+ #include <tesseract_command_language/core/serialization.h>
+ #include <tesseract_common/sfinae_utils.h>
++#include <tesseract_command_language/utils/remove_reference.h>
+ 
+ #ifdef SWIG
+ %ignore std::vector<tesseract_planning::Instruction>::vector(size_type);
+@@ -230,7 +231,7 @@ namespace tesseract_planning
+ class Instruction
+ {
+   template <typename T>
+-  using uncvref_t = std::remove_cv_t<typename std::remove_reference<T>::type>;
++  using uncvref_t = std::remove_cv_t<typename tesseract_planning::remove_reference<T>::type>;
+ 
+   // Enable the generic ctor only if ``T`` is not a ForwardKinematics (after removing const/reference qualifiers)
+   // If ``T`` is of type ForwardKinematics we disable so it will use the copy or move constructors of this class.
+diff --git a/tesseract_command_language/include/tesseract_command_language/core/waypoint.h b/tesseract_command_language/include/tesseract_command_language/core/waypoint.h
+index c68892841..d68e4ff00 100644
+--- a/tesseract_command_language/include/tesseract_command_language/core/waypoint.h
++++ b/tesseract_command_language/include/tesseract_command_language/core/waypoint.h
+@@ -40,6 +40,7 @@ TESSERACT_COMMON_IGNORE_WARNINGS_POP
+ 
+ #include <tesseract_command_language/core/serialization.h>
+ #include <tesseract_common/sfinae_utils.h>
++#include <tesseract_command_language/utils/remove_reference.h>
+ 
+ #ifdef SWIG
+ //%template(Waypoints) std::vector<tesseract_planning::Waypoint>;
+@@ -196,7 +197,7 @@ namespace tesseract_planning
+ class Waypoint
+ {
+   template <typename T>
+-  using uncvref_t = std::remove_cv_t<typename std::remove_reference<T>::type>;
++  using uncvref_t = std::remove_cv_t<typename tesseract_planning::remove_reference<T>::type>;
+ 
+   // Enable the generic ctor only if ``T`` is not a ForwardKinematics (after removing const/reference qualifiers)
+   // If ``T`` is of type ForwardKinematics we disable so it will use the copy or move constructors of this class.
+diff --git a/tesseract_command_language/include/tesseract_command_language/utils/remove_reference.h b/tesseract_command_language/include/tesseract_command_language/utils/remove_reference.h
+new file mode 100644
+index 000000000..e1c1444b1
+--- /dev/null
++++ b/tesseract_command_language/include/tesseract_command_language/utils/remove_reference.h
+@@ -0,0 +1,39 @@
++#include <type_traits>
++
++#pragma once
++
++namespace tesseract_planning
++{
++
++template <typename T>
++struct remove_reference
++{
++  using type = typename std::remove_reference<T>::type;
++};
++
++#ifdef SWIG
++template <typename T>
++struct remove_reference<SwigValueReference<T>>
++{
++  using type = typename T;
++};
++
++template <typename T>
++struct remove_reference<SwigValueReference<T>&>
++{
++  using type = typename T;
++};
++
++template <typename T>
++struct remove_reference<const SwigValueReference<T>>
++{
++  using type = typename T;
++};
++
++template <typename T>
++struct remove_reference<const SwigValueReference<T>&>
++{
++  using type = typename T;
++};
++#endif
++}
+\ No newline at end of file
+diff --git a/tesseract_motion_planners/CMakeLists.txt b/tesseract_motion_planners/CMakeLists.txt
+index 042894301..fd745691e 100644
+--- a/tesseract_motion_planners/CMakeLists.txt
++++ b/tesseract_motion_planners/CMakeLists.txt
+@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.5.0)
+ # Extract package name and version
+ find_package(ros_industrial_cmake_boilerplate REQUIRED)
+ extract_package_metadata(pkg)
+-project(${pkg_extracted_name} VERSION ${pkg_extracted_version} LANGUAGES CXX)
++project(${pkg_extracted_name} VERSION ${pkg_extracted_version} LANGUAGES CXX C)
+ 
+ if(WIN32)
+   set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
+@@ -191,7 +191,7 @@ install(DIRECTORY include/${PROJECT_NAME}
+   PATTERN ".svn" EXCLUDE
+ )
+ 
+-add_subdirectory(examples)
++# add_subdirectory(examples)
+ 
+ if (TESSERACT_ENABLE_TESTING)
+   enable_testing()
+diff --git a/tesseract_process_managers/CMakeLists.txt b/tesseract_process_managers/CMakeLists.txt
+index 3f0d6b7fb..11a971225 100644
+--- a/tesseract_process_managers/CMakeLists.txt
++++ b/tesseract_process_managers/CMakeLists.txt
+@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.5.0)
+ # Extract package name and version
+ find_package(ros_industrial_cmake_boilerplate REQUIRED)
+ extract_package_metadata(pkg)
+-project(${pkg_extracted_name} VERSION ${pkg_extracted_version} LANGUAGES CXX)
++project(${pkg_extracted_name} VERSION ${pkg_extracted_version} LANGUAGES CXX C)
+ 
+ if(WIN32)
+   set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
+@@ -96,7 +96,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
+     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+     "$<INSTALL_INTERFACE:include>")
+ 
+-add_subdirectory(examples)
++# add_subdirectory(examples)
+ 
+ configure_package(NAMESPACE tesseract TARGETS ${PROJECT_NAME})
+ 
