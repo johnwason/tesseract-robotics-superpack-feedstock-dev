@@ -74,6 +74,7 @@ requirements:
     - swig
     - python
     - numpy
+    - pip
     - cmake
     - ninja # [win]
     - make # [linux]
