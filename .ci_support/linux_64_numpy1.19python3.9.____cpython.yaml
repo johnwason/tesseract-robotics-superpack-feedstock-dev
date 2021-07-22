@@ -7,7 +7,7 @@ c_compiler_version:
 cdt_name:
 - cos6
 channel_sources:
-- conda-forge,robotology,defaults
+- conda-forge,defaults
 channel_targets:
 - tesseract-robotics main
 cxx_compiler:
