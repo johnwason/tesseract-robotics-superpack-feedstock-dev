@@ -8,7 +8,8 @@ call colcon build --merge-install --install-base="%PREFIX%\opt\tesseract_robotic
    -DBUILD_SNOPT=OFF ^
    -DCMAKE_PREFIX_PATH:PATH="%LIBRARY_PREFIX%" ^
    -DTESSERACT_ENABLE_CLANG_TIDY=OFF ^
-   -DTESSERACT_ENABLE_CODE_COVERAGE=OFF
+   -DTESSERACT_ENABLE_CODE_COVERAGE=OFF ^
+   -DLZMA_LIBRARY="%LIBRARY_PREFIX%\lib/liblzma.lib"
 
 if %errorlevel% neq 0 exit /b %errorlevel%
 

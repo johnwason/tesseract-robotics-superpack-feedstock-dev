@@ -3,7 +3,7 @@ boost_cpp:
 c_compiler:
 - vs2017
 channel_sources:
-- conda-forge,robotology,defaults
+- conda-forge,defaults
 channel_targets:
 - tesseract-robotics main
 cxx_compiler:
@@ -30,6 +30,8 @@ python:
 - 3.8.* *_cpython
 target_platform:
 - win-64
+tinyxml2:
+- '9'
 xz:
 - '5.2'
 zip_keys:

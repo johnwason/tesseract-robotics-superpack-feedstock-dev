@@ -1,6 +1,6 @@
 package:
   name: tesseract-robotics-superpack
-  version: 0.1.0dev0
+  version: 0.2.0dev0
 
 source:
   - git_url: https://github.com/ros-industrial/ros_industrial_cmake_boilerplate.git
@@ -14,6 +14,8 @@ source:
   - git_url: https://github.com/ethz-adrl/ifopt.git
     folder: src/ifopt
     git_rev: 27451ce3212d3c0ccd3a0db9a1ee9a9963466674
+    patches:
+      - ifopt_win_fix.patch # [win]
   - git_url: https://github.com/swri-robotics/descartes_light.git
     folder: src/descartes_light
     git_rev: 0.2.1
@@ -41,9 +43,6 @@ source:
     patches:
       - tesseract_python_win_fix.patch # [win]
       - tesseract_python_linux_fix.patch # [linux]
-  - url: https://github.com/ompl/ompl/archive/1.5.2.tar.gz # [linux]
-    sha256: db1665dd2163697437ef155668fdde6101109e064a2d1a04148e45b3747d5f98
-    folder: src/ompl
 
 
 requirements:
@@ -66,7 +65,7 @@ requirements:
     - osqp 
     - osqp-eigen 
     - xz
-    - ompl # [not linux]
+    - ompl
     - flann
     - libode
     - jsoncpp
@@ -100,7 +99,7 @@ requirements:
     - osqp-eigen 
     - xz
     - jsoncpp
-    - ompl # [not linux]
+    - ompl
     - libode
     - taskflow 
     - python
