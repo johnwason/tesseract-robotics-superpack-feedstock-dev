@@ -14,6 +14,8 @@ source:
   - git_url: https://github.com/ethz-adrl/ifopt.git
     folder: src/ifopt
     git_rev: 27451ce3212d3c0ccd3a0db9a1ee9a9963466674
+    patches:
+      - ifopt_win_fix.patch # [win]
   - git_url: https://github.com/swri-robotics/descartes_light.git
     folder: src/descartes_light
     git_rev: 0.2.1
