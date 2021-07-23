@@ -54,7 +54,7 @@ requirements:
     - console_bridge
     - assimp
     - urdfdom 
-    - bullet 
+    - bullet-cpp
     - fcl
     - octomap 
     - orocos-kdl 
@@ -107,6 +107,7 @@ requirements:
 
 build:
   skip: true # [py<38]
+  build_number: 1
 
 about:
   home: https://github.com/ros-industrial-consortium/tesseract
