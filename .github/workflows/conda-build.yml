@@ -13,8 +13,8 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - CONFIG: linux_64_numpy1.17python3.8.____cpython
-            SHORT_CONFIG: linux_64_numpy1.17python3.8.____cpython
+          - CONFIG: linux_64_numpy1.18python3.8.____cpython
+            SHORT_CONFIG: linux_64_numpy1.18python3.8.____cpython
             UPLOAD_PACKAGES: False
             DOCKER_IMAGE: quay.io/condaforge/linux-anvil-comp7
             os: ubuntu
@@ -23,8 +23,8 @@ jobs:
             UPLOAD_PACKAGES: False
             DOCKER_IMAGE: quay.io/condaforge/linux-anvil-comp7
             os: ubuntu
-          - CONFIG: win_64_numpy1.17python3.8.____cpython
-            SHORT_CONFIG: win_64_numpy1.17python3.8.____cpython
+          - CONFIG: win_64_numpy1.18python3.8.____cpython
+            SHORT_CONFIG: win_64_numpy1.18python3.8.____cpython
             UPLOAD_PACKAGES: False
             os: windows
           - CONFIG: win_64_numpy1.19python3.9.____cpython
@@ -49,6 +49,11 @@ jobs:
         docker run --rm --privileged multiarch/qemu-user-static:register --reset --credential yes
         export FEEDSTOCK_NAME="$(basename $GITHUB_REPOSITORY)"
         export GIT_BRANCH="$(basename $GITHUB_REF)"
+        if [[ "${GITHUB_EVENT_NAME}" == "pull_request" ]]; then
+          export IS_PR_BUILD="True"
+        else
+          export IS_PR_BUILD="False"
+        fi
         echo "::endgroup::"
         ./.scripts/run_docker_build.sh
 
@@ -63,6 +68,11 @@ jobs:
       run: |
         export FEEDSTOCK_NAME="$(basename $GITHUB_REPOSITORY)"
         export GIT_BRANCH="$(basename $GITHUB_REF)"
+        if [[ "${GITHUB_EVENT_NAME}" == "pull_request" ]]; then
+          export IS_PR_BUILD="True"
+        else
+          export IS_PR_BUILD="False"
+        fi
         ./.scripts/run_osx_build.sh
 
     - name: Install Miniconda for windows
@@ -84,8 +94,15 @@ jobs:
         if errorlevel 1 exit 1
         set "FEEDSTOCK_NAME=%GITHUB_REPOSITORY:*/=%"
         set "GIT_BRANCH=%GITHUB_REF:refs/heads/=%"
+        if /i "%GITHUB_EVENT_NAME%" == "pull_request" (
+          set "IS_PR_BUILD=True"
+        ) else (
+          set "IS_PR_BUILD=False"
+        )
         if /i "%UPLOAD_PACKAGES%" == "true" (
-          upload_package  .\ ".\recipe" .ci_support\%CONFIG%.yaml
+          if /i "%IS_PR_BUILD%" == "false" (
+            upload_package  .\ ".\recipe" .ci_support\%CONFIG%.yaml
+          )
         )
       env:
         PYTHONUNBUFFERED: 1
@@ -103,55 +120,45 @@ jobs:
         SHORT_CONFIG: ${{ matrix.SHORT_CONFIG }}
         OS: ${{ matrix.os }}
       run: |
-        set -x
-
+        export CI=github_actions
+        export CI_RUN_ID=$GITHUB_RUN_ID
+        export FEEDSTOCK_NAME="$(basename $GITHUB_REPOSITORY)"
+        export ARTIFACT_STAGING_DIR="$GITHUB_WORKSPACE"
+        if [ $OS == "macos" ]; then
+          export CONDA_BLD_DIR="${MINIFORGE_HOME:-${HOME}/miniforge3}/conda-bld"
+        elif [ $OS == "windows" ]; then
+          export CONDA_BLD_DIR="${CONDA//\\//}/conda-bld"
+        else
+          export CONDA_BLD_DIR="build_artifacts"
+        fi
+        # Archive everything in CONDA_BLD_DIR except environments
+        # Archive the CONDA_BLD_DIR environments only when the job fails
         # Use different prefix for successful and failed build artifacts
         # so random failures don't prevent rebuilds from creating artifacts.
         JOB_STATUS="${{ job.status }}"
         if [ $JOB_STATUS == "failure" ]; then
-          ARTIFACT_PREFIX="conda_artifacts"
+          export BLD_ARTIFACT_PREFIX="conda_artifacts"
+          export ENV_ARTIFACT_PREFIX="conda_envs"
         else
-          ARTIFACT_PREFIX="conda_pkgs"
+          export BLD_ARTIFACT_PREFIX="conda_pkgs"
         fi
-
-        # Set the artifact name, specialized for this particular job run.
-        ARTIFACT_NAME="${ARTIFACT_PREFIX}_${GITHUB_RUN_ID}_${CONFIG}"
-        if [[ ${#ARTIFACT_NAME} -gt 80 ]]; then
-          ARTIFACT_NAME="${ARTIFACT_PREFIX}_${GITHUB_RUN_ID}_${SHORT_CONFIG}"
-        fi
-        echo "::set-output name=ARTIFACT_NAME::$ARTIFACT_NAME"
-
-        # Check that the conda-build directory exists for archiving.
-        if [ $OS == "macos" ]; then
-          ARTIFACT_DIR="${MINIFORGE_HOME:-${HOME}/miniforge3}/conda-bld"
-        elif [ $OS == "windows" ]; then
-          ARTIFACT_DIR="${CONDA//\\//}/conda-bld"
-        else
-          ARTIFACT_DIR="build_artifacts"
-        fi
-        if [ ! -d "$ARTIFACT_DIR" ]; then
-          echo "conda-build directory does not exist" 1>&2
-          exit 1
-        fi
-
-        # Create a zip archive to use as the artifact.
-        # (zip is not available on Windows container)
-        # (7z is not present on macOS, mangled as part of Homebrew)
-        ARTIFACT_ZIP="${ARTIFACT_NAME}.zip"
-        if [ $OS == "windows" ]; then
-          7z a "$ARTIFACT_ZIP" "$ARTIFACT_DIR" '-xr!.git/' '-xr!_*_env*/' '-xr!*_cache/'
-        else
-          cd "$ARTIFACT_DIR"
-          zip -r -y -q "$GITHUB_WORKSPACE/$ARTIFACT_ZIP" . -x '*.git/*' '*_*_env*/*' '*_cache/*'
-        fi
-        echo "::set-output name=ARTIFACT_PATH::$ARTIFACT_ZIP"
+        ./.scripts/create_conda_build_artifacts.sh
       continue-on-error: true
 
     - name: Store conda build artifacts
       uses: actions/upload-artifact@v2
       if: ${{ always() && steps.prepare-artifacts.outcome == 'success' }}
       with:
-        name: ${{ steps.prepare-artifacts.outputs.ARTIFACT_NAME }}
-        path: ${{ steps.prepare-artifacts.outputs.ARTIFACT_PATH }}
+        name: ${{ steps.prepare-artifacts.outputs.BLD_ARTIFACT_NAME }}
+        path: ${{ steps.prepare-artifacts.outputs.BLD_ARTIFACT_PATH }}
+        retention-days: 14
+      continue-on-error: true
+
+    - name: Store conda build environment artifacts
+      uses: actions/upload-artifact@v2
+      if: ${{ failure() && steps.prepare-artifacts.outcome == 'success' }}
+      with:
+        name: ${{ steps.prepare-artifacts.outputs.ENV_ARTIFACT_NAME }}
+        path: ${{ steps.prepare-artifacts.outputs.ENV_ARTIFACT_PATH }}
         retention-days: 14
       continue-on-error: true
