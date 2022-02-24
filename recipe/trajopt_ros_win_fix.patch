@@ -1,5 +1,5 @@
 diff --git a/trajopt/CMakeLists.txt b/trajopt/CMakeLists.txt
-index b849d32..bec3b82 100644
+index 5a4830b..0dd4e92 100644
 --- a/trajopt/CMakeLists.txt
 +++ b/trajopt/CMakeLists.txt
 @@ -1,5 +1,5 @@
@@ -10,135 +10,31 @@ index b849d32..bec3b82 100644
  if(WIN32)
    set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 diff --git a/trajopt/test/benchmarks/CMakeLists.txt b/trajopt/test/benchmarks/CMakeLists.txt
-index f8cbb30..5f68f80 100644
+index b5207ba..3587755 100644
 --- a/trajopt/test/benchmarks/CMakeLists.txt
 +++ b/trajopt/test/benchmarks/CMakeLists.txt
-@@ -10,7 +10,7 @@ macro(add_benchmark benchmark_name benchmark_file)
-   target_link_libraries(${benchmark_name}
-       ${PROJECT_NAME}
-       tesseract::tesseract
--      osqp::osqpstatic
-+      osqp::osqp
-       benchmark::benchmark
-       )
-   target_include_directories(${benchmark_name} PRIVATE
-diff --git a/trajopt_ext/osqp/CMakeLists.txt b/trajopt_ext/osqp/CMakeLists.txt
-deleted file mode 100644
-index 30825a4..0000000
---- a/trajopt_ext/osqp/CMakeLists.txt
-+++ /dev/null
-@@ -1,22 +0,0 @@
--cmake_minimum_required(VERSION 3.5.0)
--project(osqp)
--
--find_package(osqp QUIET)
--
--if (NOT ${osqp_FOUND})
--  message(WARNING "No valid OSQP version found. Cloning OSQP 0.6.0 into build directory")
--
--  include(ExternalProject)
--
--  ExternalProject_Add(osqp
--    GIT_REPOSITORY    https://github.com/oxfordcontrol/osqp
--    GIT_TAG           v0.6.2
--    SOURCE_DIR        ${CMAKE_BINARY_DIR}/../trajopt_ext/osqp-src
--    BINARY_DIR        ${CMAKE_BINARY_DIR}/../trajopt_ext/osqp-build
--    CMAKE_CACHE_ARGS
--            -DCMAKE_INSTALL_PREFIX:STRING=${CMAKE_INSTALL_PREFIX}
--            -DCMAKE_BUILD_TYPE:STRING=Release
--  )
--endif()
--
--install(FILES package.xml DESTINATION share/osqp)
-diff --git a/trajopt_ext/osqp/colcon.pkg b/trajopt_ext/osqp/colcon.pkg
-deleted file mode 100644
-index ee41d4b..0000000
---- a/trajopt_ext/osqp/colcon.pkg
-+++ /dev/null
-@@ -1,3 +0,0 @@
--{
--    "hooks": ["share/osqp/hook/ament_prefix_path.dsv", "share/osqp/hook/ros_package_path.dsv"]
--}
-diff --git a/trajopt_ext/osqp/package.xml b/trajopt_ext/osqp/package.xml
-deleted file mode 100644
-index 05e87e4..0000000
---- a/trajopt_ext/osqp/package.xml
-+++ /dev/null
-@@ -1,13 +0,0 @@
--<?xml version="1.0"?>
--<package format="2">
--  <name>osqp</name>
--  <version>0.1.0</version>
--  <description>OSQP Package</description>
--  <maintainer email="levi.armstrong@swri.org">Levi Armstrong</maintainer>
--  <license>Apache 2.0</license>
--
--  <export>
--    <build_type>cmake</build_type>
--  </export>
--
--</package>
-diff --git a/trajopt_ext/osqp_eigen/CMakeLists.txt b/trajopt_ext/osqp_eigen/CMakeLists.txt
-deleted file mode 100644
-index d182d6a..0000000
---- a/trajopt_ext/osqp_eigen/CMakeLists.txt
-+++ /dev/null
-@@ -1,23 +0,0 @@
--cmake_minimum_required(VERSION 3.5.0)
--project(OsqpEigen)
--
--find_package(OsqpEigen QUIET)
--
--if (NOT ${OsqpEigen_FOUND})
--  message(WARNING "No valid OsqpEigen version found. Cloning into build directory")
--
--  include(ExternalProject)  
--
--  ExternalProject_Add(osqp_eigen
--    GIT_REPOSITORY    https://github.com/robotology/osqp-eigen
--    GIT_TAG           v0.6.3
--    SOURCE_DIR        ${CMAKE_BINARY_DIR}/../trajopt_ext/osqp_eigen-src
--    BINARY_DIR        ${CMAKE_BINARY_DIR}/../trajopt_ext/osqp_eigen-build
--    CMAKE_CACHE_ARGS
--            -DCMAKE_INSTALL_PREFIX:STRING=${CMAKE_INSTALL_PREFIX}
--            -DCMAKE_BUILD_TYPE:STRING=Release
--  )
--
--endif()
--
--install(FILES package.xml DESTINATION share/osqp_eigen)
-diff --git a/trajopt_ext/osqp_eigen/colcon.pkg b/trajopt_ext/osqp_eigen/colcon.pkg
-deleted file mode 100644
-index f6bae7b..0000000
---- a/trajopt_ext/osqp_eigen/colcon.pkg
-+++ /dev/null
-@@ -1,3 +0,0 @@
--{
--    "hooks": ["share/osqp_eigen/hook/ament_prefix_path.dsv", "share/osqp_eigen/hook/ros_package_path.dsv"]
--}
-diff --git a/trajopt_ext/osqp_eigen/package.xml b/trajopt_ext/osqp_eigen/package.xml
-deleted file mode 100644
-index 05031af..0000000
---- a/trajopt_ext/osqp_eigen/package.xml
-+++ /dev/null
-@@ -1,15 +0,0 @@
--<?xml version="1.0"?>
--<package format="2">
--  <name>osqp_eigen</name>
--  <version>0.1.0</version>
--  <description>Downloads and builds the OSQPEigen Library</description>
--  <maintainer email="levi.armstrong@swri.org">Levi Armstrong</maintainer>
--  <license>LGPL</license>
--
--  <build_depend>osqp</build_depend>
--
--  <export>
--    <build_type>cmake</build_type>
--  </export>
--
--</package>
+@@ -11,7 +11,7 @@ macro(add_benchmark benchmark_name benchmark_file)
+     ${benchmark_name}
+     ${PROJECT_NAME}
+     tesseract::tesseract
+-    osqp::osqpstatic
++    osqp::osqp
+     benchmark::benchmark)
+   target_include_directories(${benchmark_name} PRIVATE "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>")
+   add_dependencies(${benchmark_name} ${PROJECT_NAME})
+diff --git a/trajopt_ext/vhacd/CMakeLists.txt b/trajopt_ext/vhacd/CMakeLists.txt
+index 59c143e..39931d0 100644
+--- a/trajopt_ext/vhacd/CMakeLists.txt
++++ b/trajopt_ext/vhacd/CMakeLists.txt
+@@ -1,5 +1,5 @@
+ cmake_minimum_required(VERSION 3.10.0)
+-project(vhacd VERSION 0.1.0 LANGUAGES CXX)
++project(vhacd VERSION 0.1.0 LANGUAGES CXX C)
+ 
+ find_package(Eigen3 REQUIRED)
+ find_package(OpenMP REQUIRED)
 diff --git a/trajopt_ifopt/CMakeLists.txt b/trajopt_ifopt/CMakeLists.txt
-index e319c37..dcc8808 100644
+index 8061798..d793c18 100644
 --- a/trajopt_ifopt/CMakeLists.txt
 +++ b/trajopt_ifopt/CMakeLists.txt
 @@ -1,5 +1,5 @@
@@ -148,8 +44,22 @@ index e319c37..dcc8808 100644
  
  if(WIN32)
    set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
+diff --git a/trajopt_ifopt/src/costs/absolute_cost.cpp b/trajopt_ifopt/src/costs/absolute_cost.cpp
+index 2683ff7..4f702bf 100644
+--- a/trajopt_ifopt/src/costs/absolute_cost.cpp
++++ b/trajopt_ifopt/src/costs/absolute_cost.cpp
+@@ -80,7 +80,8 @@ void AbsoluteCost::FillJacobianBlock(std::string var_set, Jacobian& jac_block) c
+   Eigen::ArrayXd w_error = error * weights_.array();
+   Eigen::VectorXd coeff = w_error / error.abs();
+ 
+-  jac_block = coeff.sparseView() * cnt_jac_block;  // NOLINT
++  //jac_block = coeff.sparseView() * cnt_jac_block;  // NOLINT
++  jac_block = coeff * cnt_jac_block;  // NOLINT
+ }
+ 
+ }  // namespace trajopt_ifopt
 diff --git a/trajopt_optimizers/trajopt_sqp/CMakeLists.txt b/trajopt_optimizers/trajopt_sqp/CMakeLists.txt
-index 3671023..f3e04a7 100644
+index 673e508..786ed96 100644
 --- a/trajopt_optimizers/trajopt_sqp/CMakeLists.txt
 +++ b/trajopt_optimizers/trajopt_sqp/CMakeLists.txt
 @@ -1,5 +1,5 @@
@@ -160,28 +70,46 @@ index 3671023..f3e04a7 100644
  if(WIN32)
    set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 diff --git a/trajopt_sco/CMakeLists.txt b/trajopt_sco/CMakeLists.txt
-index 373b213..da083cc 100644
+index 7067680..03fea2d 100644
 --- a/trajopt_sco/CMakeLists.txt
 +++ b/trajopt_sco/CMakeLists.txt
-@@ -82,7 +82,7 @@ if (HAVE_BPMPD)
-   target_compile_definitions(${PROJECT_NAME} PRIVATE BPMPD_CALLER="${CMAKE_INSTALL_PREFIX}/bin/bpmpd_caller" HAVE_BPMPD=ON)
+@@ -1,5 +1,5 @@
+ cmake_minimum_required(VERSION 3.10.0)
+-project(trajopt_sco VERSION 0.1.0 LANGUAGES CXX)
++project(trajopt_sco VERSION 0.1.0 LANGUAGES CXX C)
+ 
+ if(WIN32)
+   set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
+@@ -85,7 +85,7 @@ if(HAVE_BPMPD)
+                                                      HAVE_BPMPD=ON)
  endif()
- if (osqp_FOUND)
+ if(osqp_FOUND)
 -  target_link_libraries(${PROJECT_NAME} PRIVATE osqp::osqpstatic)
 +  target_link_libraries(${PROJECT_NAME} PRIVATE osqp::osqp)
    target_compile_definitions(${PROJECT_NAME} PRIVATE HAVE_OSQP=ON)
  endif()
- if (qpOASES_FOUND)
+ if(qpOASES_FOUND)
 diff --git a/trajopt_sco/test/CMakeLists.txt b/trajopt_sco/test/CMakeLists.txt
-index 7c5ed8c..abe1352 100644
+index 6affc26..901c640 100644
 --- a/trajopt_sco/test/CMakeLists.txt
 +++ b/trajopt_sco/test/CMakeLists.txt
-@@ -40,7 +40,7 @@ set(SCO_TEST_SOURCE
- add_executable(${PROJECT_NAME}-test ${SCO_TEST_SOURCE})
- target_link_libraries(${PROJECT_NAME}-test GTest::GTest GTest::Main ${PROJECT_NAME})
- if (osqp_FOUND)
--    target_link_libraries(${PROJECT_NAME}-test osqp::osqpstatic)
-+    target_link_libraries(${PROJECT_NAME}-test osqp::osqp)
+@@ -43,7 +43,7 @@ target_link_libraries(
+   GTest::Main
+   ${PROJECT_NAME})
+ if(osqp_FOUND)
+-  target_link_libraries(${PROJECT_NAME}-test osqp::osqpstatic)
++  target_link_libraries(${PROJECT_NAME}-test osqp::osqp)
  endif()
- target_compile_options(${PROJECT_NAME}-test PRIVATE ${TRAJOPT_COMPILE_OPTIONS_PRIVATE} ${TRAJOPT_COMPILE_OPTIONS_PUBLIC})
- target_compile_definitions(${PROJECT_NAME}-test PRIVATE ${TRAJOPT_COMPILE_DEFINITIONS} TRAJOPT_IFOPT_DIR="${CMAKE_SOURCE_DIR}")
+ target_compile_options(${PROJECT_NAME}-test PRIVATE ${TRAJOPT_COMPILE_OPTIONS_PRIVATE}
+                                                     ${TRAJOPT_COMPILE_OPTIONS_PUBLIC})
+diff --git a/trajopt_utils/CMakeLists.txt b/trajopt_utils/CMakeLists.txt
+index 9f6de79..c79f409 100644
+--- a/trajopt_utils/CMakeLists.txt
++++ b/trajopt_utils/CMakeLists.txt
+@@ -1,5 +1,5 @@
+ cmake_minimum_required(VERSION 3.10.0)
+-project(trajopt_utils VERSION 0.1.0 LANGUAGES CXX)
++project(trajopt_utils VERSION 0.1.0 LANGUAGES CXX C)
+ 
+ include(cmake/trajopt_macros.cmake)
+ 

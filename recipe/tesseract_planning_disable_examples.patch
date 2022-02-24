@@ -1,0 +1,26 @@
+diff --git a/tesseract_motion_planners/CMakeLists.txt b/tesseract_motion_planners/CMakeLists.txt
+index 14eb54a8c7..e2d9a861cc 100644
+--- a/tesseract_motion_planners/CMakeLists.txt
++++ b/tesseract_motion_planners/CMakeLists.txt
+@@ -74,7 +74,7 @@ if(TESSERACT_BUILD_TRAJOPT_IFOPT)
+ endif()
+ 
+ # Examples
+-add_subdirectory(examples)
++# add_subdirectory(examples)
+ 
+ # Tests
+ if(TESSERACT_ENABLE_TESTING)
+diff --git a/tesseract_process_managers/CMakeLists.txt b/tesseract_process_managers/CMakeLists.txt
+index 779066b747..96b2cb18a0 100644
+--- a/tesseract_process_managers/CMakeLists.txt
++++ b/tesseract_process_managers/CMakeLists.txt
+@@ -132,7 +132,7 @@ target_include_directories(${PROJECT_NAME}_utils PUBLIC "$<BUILD_INTERFACE:${CMA
+                                                         "$<INSTALL_INTERFACE:include>")
+ list(APPEND Targets ${PROJECT_NAME}_utils)
+ 
+-add_subdirectory(examples)
++# add_subdirectory(examples)
+ 
+ configure_package(NAMESPACE tesseract TARGETS ${Targets})
+ 
