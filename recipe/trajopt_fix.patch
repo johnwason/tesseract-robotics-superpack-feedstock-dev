@@ -1,0 +1,177 @@
+diff --git a/trajopt/CMakeLists.txt b/trajopt/CMakeLists.txt
+index 5a4830b..a4bb14d 100644
+--- a/trajopt/CMakeLists.txt
++++ b/trajopt/CMakeLists.txt
+@@ -1,5 +1,5 @@
+ cmake_minimum_required(VERSION 3.10.0)
+-project(trajopt VERSION 0.1.0 LANGUAGES CXX)
++project(trajopt VERSION 0.1.0 LANGUAGES CXX C)
+ 
+ if(WIN32)
+   set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
+@@ -12,7 +12,9 @@ find_package(trajopt_sco REQUIRED)
+ find_package(trajopt_utils REQUIRED)
+ find_package(tesseract_environment REQUIRED)
+ find_package(tesseract_visualization REQUIRED)
++if(NOT TARGET JsonCpp::JsonCpp)
+ find_package(jsoncpp REQUIRED)
++endif()
+ find_package(ros_industrial_cmake_boilerplate REQUIRED)
+ 
+ if(NOT TARGET console_bridge::console_bridge)
+diff --git a/trajopt/cmake/trajopt-config.cmake.in b/trajopt/cmake/trajopt-config.cmake.in
+index 71c1fed..7a9f367 100644
+--- a/trajopt/cmake/trajopt-config.cmake.in
++++ b/trajopt/cmake/trajopt-config.cmake.in
+@@ -16,7 +16,9 @@ find_dependency(trajopt_sco)
+ find_dependency(trajopt_utils)
+ find_dependency(tesseract_environment)
+ find_dependency(tesseract_visualization)
++if(NOT TARGET JsonCpp::JsonCpp)
+ find_dependency(jsoncpp)
++endif()
+ 
+ if(NOT TARGET console_bridge::console_bridge)
+   add_library(console_bridge::console_bridge INTERFACE IMPORTED)
+diff --git a/trajopt/test/benchmarks/CMakeLists.txt b/trajopt/test/benchmarks/CMakeLists.txt
+index b5207ba..3587755 100644
+--- a/trajopt/test/benchmarks/CMakeLists.txt
++++ b/trajopt/test/benchmarks/CMakeLists.txt
+@@ -11,7 +11,7 @@ macro(add_benchmark benchmark_name benchmark_file)
+     ${benchmark_name}
+     ${PROJECT_NAME}
+     tesseract::tesseract
+-    osqp::osqpstatic
++    osqp::osqp
+     benchmark::benchmark)
+   target_include_directories(${benchmark_name} PRIVATE "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>")
+   add_dependencies(${benchmark_name} ${PROJECT_NAME})
+diff --git a/trajopt_ext/vhacd/CMakeLists.txt b/trajopt_ext/vhacd/CMakeLists.txt
+index 59c143e..39931d0 100644
+--- a/trajopt_ext/vhacd/CMakeLists.txt
++++ b/trajopt_ext/vhacd/CMakeLists.txt
+@@ -1,5 +1,5 @@
+ cmake_minimum_required(VERSION 3.10.0)
+-project(vhacd VERSION 0.1.0 LANGUAGES CXX)
++project(vhacd VERSION 0.1.0 LANGUAGES CXX C)
+ 
+ find_package(Eigen3 REQUIRED)
+ find_package(OpenMP REQUIRED)
+diff --git a/trajopt_ifopt/CMakeLists.txt b/trajopt_ifopt/CMakeLists.txt
+index 8061798..d793c18 100644
+--- a/trajopt_ifopt/CMakeLists.txt
++++ b/trajopt_ifopt/CMakeLists.txt
+@@ -1,5 +1,5 @@
+ cmake_minimum_required(VERSION 3.10.0)
+-project(trajopt_ifopt VERSION 0.1.0 LANGUAGES CXX)
++project(trajopt_ifopt VERSION 0.1.0 LANGUAGES CXX C)
+ 
+ if(WIN32)
+   set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
+diff --git a/trajopt_ifopt/src/costs/absolute_cost.cpp b/trajopt_ifopt/src/costs/absolute_cost.cpp
+index 2683ff7..4f702bf 100644
+--- a/trajopt_ifopt/src/costs/absolute_cost.cpp
++++ b/trajopt_ifopt/src/costs/absolute_cost.cpp
+@@ -80,7 +80,8 @@ void AbsoluteCost::FillJacobianBlock(std::string var_set, Jacobian& jac_block) c
+   Eigen::ArrayXd w_error = error * weights_.array();
+   Eigen::VectorXd coeff = w_error / error.abs();
+ 
+-  jac_block = coeff.sparseView() * cnt_jac_block;  // NOLINT
++  //jac_block = coeff.sparseView() * cnt_jac_block;  // NOLINT
++  jac_block = coeff * cnt_jac_block;  // NOLINT
+ }
+ 
+ }  // namespace trajopt_ifopt
+diff --git a/trajopt_optimizers/trajopt_sqp/CMakeLists.txt b/trajopt_optimizers/trajopt_sqp/CMakeLists.txt
+index 673e508..786ed96 100644
+--- a/trajopt_optimizers/trajopt_sqp/CMakeLists.txt
++++ b/trajopt_optimizers/trajopt_sqp/CMakeLists.txt
+@@ -1,5 +1,5 @@
+ cmake_minimum_required(VERSION 3.10.0)
+-project(trajopt_sqp VERSION 0.1.0 LANGUAGES CXX)
++project(trajopt_sqp VERSION 0.1.0 LANGUAGES CXX C)
+ 
+ if(WIN32)
+   set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
+diff --git a/trajopt_sco/CMakeLists.txt b/trajopt_sco/CMakeLists.txt
+index 7067680..f3f7d55 100644
+--- a/trajopt_sco/CMakeLists.txt
++++ b/trajopt_sco/CMakeLists.txt
+@@ -1,5 +1,5 @@
+ cmake_minimum_required(VERSION 3.10.0)
+-project(trajopt_sco VERSION 0.1.0 LANGUAGES CXX)
++project(trajopt_sco VERSION 0.1.0 LANGUAGES CXX C)
+ 
+ if(WIN32)
+   set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
+@@ -12,7 +12,9 @@ find_package(osqp QUIET)
+ find_package(qpOASES QUIET)
+ find_package(Eigen3 REQUIRED)
+ find_package(trajopt_utils REQUIRED)
++if(NOT TARGET JsonCpp::JsonCpp)
+ find_package(jsoncpp REQUIRED)
++endif()
+ find_package(ros_industrial_cmake_boilerplate REQUIRED)
+ find_package(Boost REQUIRED)
+ 
+@@ -29,9 +31,10 @@ set(SCO_SOURCE_FILES
+     src/modeling_utils.cpp
+     src/num_diff.cpp)
+ 
+-if(NOT APPLE AND NOT WIN32)
+-  set(HAVE_BPMPD TRUE)
+-endif()
++# if(NOT APPLE AND NOT WIN32)
++#   set(HAVE_BPMPD TRUE)
++# endif()
++set(HAVE_BPMPD FALSE)
+ 
+ if(HAVE_BPMPD)
+   add_executable(bpmpd_caller src/bpmpd_caller.cpp)
+@@ -85,7 +88,7 @@ if(HAVE_BPMPD)
+                                                      HAVE_BPMPD=ON)
+ endif()
+ if(osqp_FOUND)
+-  target_link_libraries(${PROJECT_NAME} PRIVATE osqp::osqpstatic)
++  target_link_libraries(${PROJECT_NAME} PRIVATE osqp::osqp)
+   target_compile_definitions(${PROJECT_NAME} PRIVATE HAVE_OSQP=ON)
+ endif()
+ if(qpOASES_FOUND)
+diff --git a/trajopt_sco/cmake/trajopt_sco-config.cmake.in b/trajopt_sco/cmake/trajopt_sco-config.cmake.in
+index 890a0bf..61d1670 100644
+--- a/trajopt_sco/cmake/trajopt_sco-config.cmake.in
++++ b/trajopt_sco/cmake/trajopt_sco-config.cmake.in
+@@ -9,7 +9,9 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}")
+ include(CMakeFindDependencyMacro)
+ find_dependency(Eigen3)
+ find_dependency(trajopt_utils)
++if(NOT TARGET JsonCpp::JsonCpp)
+ find_dependency(jsoncpp)
++endif()
+ if(${CMAKE_VERSION} VERSION_LESS "3.15.0")
+     find_package(Boost REQUIRED)
+ else()
+diff --git a/trajopt_sco/test/CMakeLists.txt b/trajopt_sco/test/CMakeLists.txt
+index 6affc26..901c640 100644
+--- a/trajopt_sco/test/CMakeLists.txt
++++ b/trajopt_sco/test/CMakeLists.txt
+@@ -43,7 +43,7 @@ target_link_libraries(
+   GTest::Main
+   ${PROJECT_NAME})
+ if(osqp_FOUND)
+-  target_link_libraries(${PROJECT_NAME}-test osqp::osqpstatic)
++  target_link_libraries(${PROJECT_NAME}-test osqp::osqp)
+ endif()
+ target_compile_options(${PROJECT_NAME}-test PRIVATE ${TRAJOPT_COMPILE_OPTIONS_PRIVATE}
+                                                     ${TRAJOPT_COMPILE_OPTIONS_PUBLIC})
+diff --git a/trajopt_utils/CMakeLists.txt b/trajopt_utils/CMakeLists.txt
+index 9f6de79..c79f409 100644
+--- a/trajopt_utils/CMakeLists.txt
++++ b/trajopt_utils/CMakeLists.txt
+@@ -1,5 +1,5 @@
+ cmake_minimum_required(VERSION 3.10.0)
+-project(trajopt_utils VERSION 0.1.0 LANGUAGES CXX)
++project(trajopt_utils VERSION 0.1.0 LANGUAGES CXX C)
+ 
+ include(cmake/trajopt_macros.cmake)
+ 

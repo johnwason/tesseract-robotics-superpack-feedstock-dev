@@ -1,6 +1,6 @@
 package:
   name: tesseract-robotics-superpack
-  version: 0.3.0dev0
+  version: 0.4.0dev0
 
 source:
   - git_url: https://github.com/ros-industrial/ros_industrial_cmake_boilerplate.git
@@ -9,44 +9,56 @@ source:
   - git_url: https://github.com/Jmeyer1292/opw_kinematics.git
     folder: src/opw_kinematics
     git_rev: 0.4.4
+    patches:
+      - opw_interface_fix.patch
   - git_url: https://github.com/ethz-adrl/ifopt.git
     folder: src/ifopt
-    git_rev: 2.1.2
+    git_rev: 40a6c8c14d1ab9789c342203d1fb3046eae07669
     patches:
-      - ifopt_win_fix.patch # [win]
+      - ifopt_fix_win_find_ipopt.patch # [win]
+      - ifopt_disable_build_tests.patch # [linux]
   - git_url: https://github.com/swri-robotics/descartes_light.git
     folder: src/descartes_light
     git_rev: 0.3.0
+    patches:
+      - descartes_cpp17.patch
   - git_url: https://github.com/tesseract-robotics/tesseract.git
     folder: src/tesseract
-    git_rev: 3a14e2a071a06c60763c0ea985de539fba7341b2
+    git_rev: 0.8.3
     patches:
-      - tesseract_disable_examples.patch # [win]
-    #   - tesseract_linux_fix.patch # [linux]
+      - tesseract_disable_examples.patch
   - git_url: https://github.com/tesseract-robotics/trajopt.git
     folder: src/trajopt
-    git_rev: 0.2.0
+    git_rev: 0.2.2
     patches:
-      - trajopt_ros_win_fix.patch # [win]
-      - trajopt_ros_linux_fix.patch # [linux]
+      - trajopt_fix.patch
   - git_url: https://github.com/tesseract-robotics/tesseract_planning.git
     folder: src/tesseract_planning
-    git_rev: 1627231f3de8118f48d19272d0a7ac43dfe2f98a
+    git_rev: 0.9.3
     patches:
-      - tesseract_planning_disable_examples.patch # [win]
-    #   - tesseract_planning_linux_fix.patch # [linux]
+      - tesseract_planning_fix.patch
   - git_url: https://github.com/tesseract-robotics/tesseract_python.git
     folder: src/tesseract_python
     git_rev: 43e77ece6386eed6e616db46661727f33fed88e9
-  #   patches:
-  #     - tesseract_python_win_fix.patch # [win]
-  #     - tesseract_python_linux_fix.patch # [linux]
+    patches:
+      - tesseract_python_fix.patch
 
 
 requirements:
+  build:
+    - {{ compiler('c') }}
+    - {{ compiler('cxx') }}
+    - gtest
+    - gmock
+    - cmake
+    - ninja # [win]
+    - make # [linux]
+    - ros-industrial-cmake-boilerplate
+    - pkg-config
+    - swig
+    - colcon-common-extensions 
   host:
     - boost-cpp 
-    - colcon-common-extensions 
     - eigen 
     - tinyxml2
     - console_bridge
@@ -65,19 +77,11 @@ requirements:
     - xz
     - ompl
     - flann
-    - libode
     - jsoncpp
     - taskflow 
-    - swig
     - python
     - numpy
     - pip
-    - cmake
-    - ninja # [win]
-    - make # [linux]
-    - {{ compiler('c') }}
-    - {{ compiler('cxx') }}
-    - lcov # [linux]
   run:
     - boost-cpp
     - eigen 
@@ -92,13 +96,11 @@ requirements:
     - pcl
     - gtest
     - gmock
-    - pkg-config 
     - osqp 
     - osqp-eigen 
     - xz
     - jsoncpp
     - ompl
-    - libode
     - taskflow 
     - python
     - numpy

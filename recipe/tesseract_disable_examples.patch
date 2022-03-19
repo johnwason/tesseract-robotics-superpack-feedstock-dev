@@ -11,6 +11,28 @@ index cba176b37f..1b908ccd96 100644
  endif()
  
  configure_package(NAMESPACE tesseract)
+diff --git a/tesseract_common/cmake/tesseract_macros.cmake b/tesseract_common/cmake/tesseract_macros.cmake
+index e346e0e5e7..2d9c673447 100644
+--- a/tesseract_common/cmake/tesseract_macros.cmake
++++ b/tesseract_common/cmake/tesseract_macros.cmake
+@@ -79,7 +79,7 @@ macro(tesseract_variables)
+           -Wsign-conversion)
+       message(WARNING "Non-GNU compiler detected. If using AVX instructions, Eigen alignment issues may result.")
+     elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+-      set(TESSERACT_COMPILE_DEFINITIONS "_USE_MATH_DEFINES=ON")
++      set(TESSERACT_COMPILE_DEFINITIONS "_USE_MATH_DEFINES=ON" "_ENABLE_EXTENDED_ALIGNED_STORAGE=1")
+       message(WARNING "Non-GNU compiler detected. If using AVX instructions, Eigen alignment issues may result.")
+     else()
+       message(WARNING "${CMAKE_CXX_COMPILER_ID} Unsupported compiler detected.")
+@@ -116,7 +116,7 @@ macro(tesseract_variables)
+           -Werror=sign-conversion)
+       message(WARNING "Non-GNU compiler detected. If using AVX instructions, Eigen alignment issues may result.")
+     elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+-      set(TESSERACT_COMPILE_DEFINITIONS "_USE_MATH_DEFINES=ON")
++      set(TESSERACT_COMPILE_DEFINITIONS "_USE_MATH_DEFINES=ON" "_ENABLE_EXTENDED_ALIGNED_STORAGE=1")
+       message(WARNING "Non-GNU compiler detected. If using AVX instructions, Eigen alignment issues may result.")
+     else()
+       message(WARNING "${CMAKE_CXX_COMPILER_ID} Unsupported compiler detected.")
 diff --git a/tesseract_geometry/CMakeLists.txt b/tesseract_geometry/CMakeLists.txt
 index e77ef5a917..efd55cf918 100644
 --- a/tesseract_geometry/CMakeLists.txt
@@ -51,9 +73,36 @@ index 809b73ae30..decc78475e 100644
  if(TESSERACT_ENABLE_TESTING)
    enable_testing()
 diff --git a/tesseract_urdf/CMakeLists.txt b/tesseract_urdf/CMakeLists.txt
-index d23e68e1d4..a05fb45503 100644
+index d23e68e1d4..3ec7c8164a 100644
 --- a/tesseract_urdf/CMakeLists.txt
 +++ b/tesseract_urdf/CMakeLists.txt
+@@ -12,7 +12,7 @@ endif()
+ find_package(Boost REQUIRED)
+ find_package(Eigen3 REQUIRED)
+ find_package(console_bridge REQUIRED)
+-find_package(PCL REQUIRED)
++find_package(PCL REQUIRED COMPONENTS common io)
+ find_package(tesseract_geometry REQUIRED)
+ find_package(tesseract_common REQUIRED)
+ find_package(tesseract_scene_graph REQUIRED)
+@@ -101,7 +101,7 @@ else(TESSERACT_Boost_VERSION_MACRO ${Boost_VERSION_MACRO})
+   set(TESSERACT_Boost_VERSION_MACRO ${Boost_VERSION})
+ endif()
+ if(TESSERACT_Boost_VERSION_MACRO VERSION_GREATER "106000")
+-  target_link_libraries(${PROJECT_NAME} PUBLIC ${PCL_LIBRARIES})
++  target_link_libraries(${PROJECT_NAME} PUBLIC ${PCL_IO_LIBRARIES} ${PCL_COMMON_LIBRARIES})
+   target_compile_definitions(${PROJECT_NAME} PUBLIC TESSERACT_PARSE_POINT_CLOUDS="ON")
+   foreach(DEF ${PCL_DEFINITIONS})
+     string(STRIP ${DEF} DEF)
+@@ -128,7 +128,7 @@ if(TESSERACT_Boost_VERSION_MACRO VERSION_GREATER "106000")
+       endif()
+     endif()
+   endforeach()
+-  target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${PCL_INCLUDE_DIRS})
++  #target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${PCL_INCLUDE_DIRS})
+ endif()
+ 
+ target_include_directories(${PROJECT_NAME} PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
 @@ -141,7 +141,7 @@ install(FILES include/${PROJECT_NAME}/urdf_parser.h DESTINATION include/${PROJEC
  install(FILES include/${PROJECT_NAME}/utils.h DESTINATION include/${PROJECT_NAME})
  
@@ -63,3 +112,16 @@ index d23e68e1d4..a05fb45503 100644
  
  if(TESSERACT_ENABLE_TESTING)
    enable_testing()
+diff --git a/tesseract_urdf/cmake/tesseract_urdf-config.cmake.in b/tesseract_urdf/cmake/tesseract_urdf-config.cmake.in
+index 583b413a37..ee18466f82 100644
+--- a/tesseract_urdf/cmake/tesseract_urdf-config.cmake.in
++++ b/tesseract_urdf/cmake/tesseract_urdf-config.cmake.in
+@@ -12,7 +12,7 @@ else()
+ endif()
+ find_dependency(Eigen3)
+ find_dependency(console_bridge)
+-find_dependency(PCL)
++find_package(PCL COMPONENTS common io)
+ find_dependency(tesseract_geometry)
+ find_dependency(tesseract_common)
+ find_dependency(tesseract_scene_graph)

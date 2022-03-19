@@ -1,0 +1,11 @@
+diff --git a/descartes_light/cmake/descartes_light_macros.cmake b/descartes_light/cmake/descartes_light_macros.cmake
+index b4d98b3..3a1f721 100644
+--- a/descartes_light/cmake/descartes_light_macros.cmake
++++ b/descartes_light/cmake/descartes_light_macros.cmake
+@@ -90,5 +90,5 @@ macro(descartes_variables)
+   endif()
+ 
+   set(CXX_STANDARD_REQUIRED ON)
+-  set(DESCARTES_CXX_VERSION 14)
++  set(DESCARTES_CXX_VERSION 17)
+ endmacro()
