@@ -1,8 +1,6 @@
 About tesseract-robotics-superpack
 ==================================
 
-See [Tesseract Readme](TESSERACT_README.md) for instructions on using the Tesseract package.
-
 Home: https://github.com/ros-industrial-consortium/tesseract
 
 Package license: 
