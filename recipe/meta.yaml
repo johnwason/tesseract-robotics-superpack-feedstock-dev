@@ -57,6 +57,7 @@ requirements:
     - pkg-config
     - swig
     - colcon-common-extensions 
+    - lcov
   host:
     - boost-cpp 
     - eigen 
@@ -82,6 +83,7 @@ requirements:
     - python
     - numpy
     - pip
+    - yaml-cpp
   run:
     - boost-cpp
     - eigen 
@@ -104,10 +106,17 @@ requirements:
     - taskflow 
     - python
     - numpy
+    - yaml-cpp
+
+test:
+  files:
+    - test_planning_server.py
+  requires:
+    - pytest
 
 build:
   skip: true # [py<38]
-  number: 0
+  number: 1
 
 about:
   home: https://github.com/ros-industrial-consortium/tesseract
