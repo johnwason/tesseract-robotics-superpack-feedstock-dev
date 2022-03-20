@@ -53,7 +53,6 @@ requirements:
     - cmake
     - ninja # [win]
     - make # [linux]
-    - ros-industrial-cmake-boilerplate
     - pkg-config
     - swig
     - colcon-common-extensions 
