@@ -3,7 +3,7 @@ assimp:
 boost_cpp:
 - 1.74.0
 c_compiler:
-- vs2019
+- gcc
 c_compiler_version:
 - '10'
 cdt_name:
@@ -13,7 +13,7 @@ channel_sources:
 channel_targets:
 - tesseract-robotics main
 cxx_compiler:
-- vs2019
+- gxx
 cxx_compiler_version:
 - '10'
 docker_image:
