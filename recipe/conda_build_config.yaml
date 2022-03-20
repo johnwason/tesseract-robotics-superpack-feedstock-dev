@@ -3,6 +3,6 @@ channel_sources:
 channel_targets:
   - tesseract-robotics main
 c_compiler:
-- vs2019
+- vs2019 # [win]
 cxx_compiler:
-- vs2019
+- vs2019 # [win]
