@@ -42,6 +42,7 @@ source:
     git_rev: 43e77ece6386eed6e616db46661727f33fed88e9
     patches:
       - tesseract_python_fix.patch
+      - tesseract_python_win_fix.patch # [win]
 
 
 requirements:
