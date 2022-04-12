@@ -1,5 +1,5 @@
 diff --git a/tesseract_command_language/include/tesseract_command_language/core/instruction.h b/tesseract_command_language/include/tesseract_command_language/core/instruction.h
-index d7d733d..613b704 100644
+index d7d733d1f2..98f433e6e6 100644
 --- a/tesseract_command_language/include/tesseract_command_language/core/instruction.h
 +++ b/tesseract_command_language/include/tesseract_command_language/core/instruction.h
 @@ -41,6 +41,7 @@ TESSERACT_COMMON_IGNORE_WARNINGS_POP
@@ -52,7 +52,7 @@ index d7d733d..613b704 100644
    }
  
 diff --git a/tesseract_command_language/include/tesseract_command_language/core/waypoint.h b/tesseract_command_language/include/tesseract_command_language/core/waypoint.h
-index d49227f..8c6968b 100644
+index d49227fdb9..224b887680 100644
 --- a/tesseract_command_language/include/tesseract_command_language/core/waypoint.h
 +++ b/tesseract_command_language/include/tesseract_command_language/core/waypoint.h
 @@ -40,6 +40,7 @@ TESSERACT_COMMON_IGNORE_WARNINGS_PUSH
@@ -106,7 +106,7 @@ index d49227f..8c6968b 100644
  
 diff --git a/tesseract_command_language/include/tesseract_command_language/utils/uncvref.h b/tesseract_command_language/include/tesseract_command_language/utils/uncvref.h
 new file mode 100644
-index 0000000..4084b6e
+index 0000000000..b2d06ef0dc
 --- /dev/null
 +++ b/tesseract_command_language/include/tesseract_command_language/utils/uncvref.h
 @@ -0,0 +1,18 @@
@@ -130,10 +130,18 @@ index 0000000..4084b6e
 +#endif
 \ No newline at end of file
 diff --git a/tesseract_motion_planners/CMakeLists.txt b/tesseract_motion_planners/CMakeLists.txt
-index 14eb54a..e2d9a86 100644
+index 14eb54a8c7..61c2049812 100644
 --- a/tesseract_motion_planners/CMakeLists.txt
 +++ b/tesseract_motion_planners/CMakeLists.txt
-@@ -74,7 +74,7 @@ if(TESSERACT_BUILD_TRAJOPT_IFOPT)
+@@ -13,6 +13,7 @@ find_package(console_bridge REQUIRED)
+ find_package(Boost REQUIRED)
+ find_package(Eigen3 REQUIRED)
+ find_package(tesseract_common REQUIRED)
++find_package(tesseract_collision REQUIRED)
+ find_package(Threads REQUIRED)
+ 
+ if(NOT TARGET console_bridge::console_bridge)
+@@ -74,7 +75,7 @@ if(TESSERACT_BUILD_TRAJOPT_IFOPT)
  endif()
  
  # Examples
@@ -143,7 +151,7 @@ index 14eb54a..e2d9a86 100644
  # Tests
  if(TESSERACT_ENABLE_TESTING)
 diff --git a/tesseract_process_managers/CMakeLists.txt b/tesseract_process_managers/CMakeLists.txt
-index 779066b..c438c27 100644
+index 779066b747..c438c27019 100644
 --- a/tesseract_process_managers/CMakeLists.txt
 +++ b/tesseract_process_managers/CMakeLists.txt
 @@ -10,6 +10,7 @@ if(WIN32)

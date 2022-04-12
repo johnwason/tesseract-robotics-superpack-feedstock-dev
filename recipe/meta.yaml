@@ -1,6 +1,6 @@
 package:
   name: tesseract-robotics-superpack
-  version: 0.4.0dev0
+  version: 0.5.0dev0
 
 source:
   - git_url: https://github.com/ros-industrial/ros_industrial_cmake_boilerplate.git
@@ -43,7 +43,11 @@ source:
     patches:
       - tesseract_python_fix.patch
       - tesseract_python_win_fix.patch # [win]
-
+  - git_url: https://github.com/bulletphysics/bullet3.git
+    folder: src/bullet
+    git_rev: "3.21"
+    patches:
+      - bullet3_fix.patch
 
 requirements:
   build:
@@ -58,14 +62,15 @@ requirements:
     - swig
     - colcon-common-extensions 
     - lcov
+    - {{ cdt('mesa-libgl-devel') }}    # [linux]
+    - {{ cdt('mesa-dri-drivers') }}    # [linux]
   host:
     - boost-cpp 
     - eigen 
     - tinyxml2
     - console_bridge
     - assimp
-    - urdfdom 
-    - bullet-cpp
+    - urdfdom
     - fcl
     - octomap 
     - orocos-kdl 
@@ -84,14 +89,15 @@ requirements:
     - numpy
     - pip
     - yaml-cpp
+    - xorg-libx11    # [unix]
+    - xorg-libxext   # [unix]
   run:
     - boost-cpp
     - eigen 
     - tinyxml2
     - console_bridge
     - assimp
-    - urdfdom 
-    - bullet 
+    - urdfdom
     - fcl
     - octomap 
     - orocos-kdl 
@@ -107,6 +113,8 @@ requirements:
     - python
     - numpy
     - yaml-cpp
+    - xorg-libx11    # [unix]
+    - xorg-libxext   # [unix]
 
 test:
   files:

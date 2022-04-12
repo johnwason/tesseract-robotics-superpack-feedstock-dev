@@ -1,9 +1,9 @@
-set CXXFLAGS="%CXXFLAGS% -D_ENABLE_EXTENDED_ALIGNED_STORAGE=1"
+set CXXFLAGS=%CXXFLAGS% -D_ENABLE_EXTENDED_ALIGNED_STORAGE=1
 
 call colcon build --merge-install --install-base="%PREFIX%\opt\tesseract_robotics" ^
    --event-handlers console_cohesion+ ^
    --packages-ignore gtest osqp osqp_eigen ^
-   --cmake-args -DCMAKE_BUILD_TYPE=Release ^
+   --cmake-args -GNinja -DCMAKE_BUILD_TYPE=Release ^
    -DCMAKE_CXX_FLAGS_RELWITHDEBINFO:STRING="/MD /Zi /O0 /Ob0 /DNDEBUG" ^
    -DBUILD_SHARED_LIBS=ON ^
    -DUSE_MSVC_RUNTIME_LIBRARY_DLL=ON ^
