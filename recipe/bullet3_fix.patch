@@ -12,14 +12,25 @@ index f5dc7bdbb..f04f7ad53 100644
  set ( BULLET_INCLUDE_DIRS "@INCLUDE_INSTALL_DIR@" )
  set ( BULLET_LIBRARIES    "@BULLET_LIBRARIES@" )
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index a695b7172..e973062c7 100644
+index a695b7172..2a26f90f8 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
-@@ -1,4 +1,86 @@
+@@ -1,10 +1,97 @@
 -cmake_minimum_required(VERSION 2.4.3)
 +cmake_minimum_required(VERSION 3.3)
 +
+ set(CMAKE_ALLOW_LOOSE_LOOP_CONSTRUCTS true)
+ cmake_policy(SET CMP0017 NEW)
+ #this line has to appear before 'PROJECT' in order to be able to disable incremental linking
+ SET(MSVC_INCREMENTAL_DEFAULT ON)
+-
+ PROJECT(BULLET_PHYSICS)
++
 +FIND_PACKAGE(OpenGL)
++
++IF (NOT WIN32)
++	FIND_PACKAGE(Threads)
++ENDIF (NOT WIN32)
 +
 +set(BUILD_SHARED_LIBS OFF CACHE BOOL "Use shared libraries" FORCE)
 +SET(INSTALL_LIBS ON CACHE BOOL "Set when you want to install libraries" FORCE)
@@ -100,10 +111,11 @@ index a695b7172..e973062c7 100644
 +
 +
 +
- set(CMAKE_ALLOW_LOOSE_LOOP_CONSTRUCTS true)
- cmake_policy(SET CMP0017 NEW)
- #this line has to appear before 'PROJECT' in order to be able to disable incremental linking
-@@ -23,16 +105,14 @@ ENDIF (NOT CMAKE_BUILD_TYPE)
++
+ FILE (STRINGS "VERSION" BULLET_VERSION)
+ 
+ IF(COMMAND cmake_policy)
+@@ -23,16 +110,14 @@ ENDIF (NOT CMAKE_BUILD_TYPE)
  SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -D_DEBUG")
  #MESSAGE("CMAKE_CXX_FLAGS_DEBUG="+${CMAKE_CXX_FLAGS_DEBUG})
  
@@ -121,7 +133,7 @@ index a695b7172..e973062c7 100644
  IF (BULLET2_MULTITHREADING)
      OPTION(BULLET2_USE_OPEN_MP_MULTITHREADING "Build Bullet 2 with support for multi-threading with OpenMP (requires a compiler with OpenMP support)" OFF)
      OPTION(BULLET2_USE_TBB_MULTITHREADING "Build Bullet 2 with support for multi-threading with Intel Threading Building Blocks (requires the TBB library to be already installed)" OFF)
-@@ -64,9 +144,9 @@ OPTION(USE_MSVC_INCREMENTAL_LINKING "Use MSVC Incremental Linking" OFF)
+@@ -64,9 +149,9 @@ OPTION(USE_MSVC_INCREMENTAL_LINKING "Use MSVC Incremental Linking" OFF)
  IF (CMAKE_SYSTEM_NAME STREQUAL WindowsPhone OR CMAKE_SYSTEM_NAME STREQUAL WindowsStore)
  	OPTION(USE_MSVC_RUNTIME_LIBRARY_DLL "Use MSVC Runtime Library DLL (/MD or /MDd)" ON)
  ELSE ()
@@ -133,7 +145,7 @@ index a695b7172..e973062c7 100644
  
  #SET(CMAKE_EXE_LINKER_FLAGS_INIT    "/STACK:10000000 /INCREMENTAL:NO")
  #SET(CMAKE_EXE_LINKER_FLAGS    "/STACK:10000000 /INCREMENTAL:NO")
-@@ -222,7 +302,7 @@ ENDIF(INTERNAL_CREATE_MSVC_RELATIVE_PATH_PROJECTFILES)
+@@ -222,7 +307,7 @@ ENDIF(INTERNAL_CREATE_MSVC_RELATIVE_PATH_PROJECTFILES)
  ENDIF (WIN32)
  
  
@@ -142,7 +154,16 @@ index a695b7172..e973062c7 100644
  
  
  
-@@ -309,7 +389,6 @@ ENDIF(COMMAND cmake_policy)
+@@ -254,7 +339,7 @@ IF(BULLET2_MULTITHREADING)
+ 		SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+ 	ENDIF (NOT MSVC)
+ 	IF (NOT WIN32)
+-		FIND_PACKAGE(Threads)
++		#FIND_PACKAGE(Threads)
+ 		LINK_LIBRARIES( ${CMAKE_THREAD_LIBS_INIT} )
+ 	ENDIF (NOT WIN32)
+ ENDIF (BULLET2_MULTITHREADING)
+@@ -309,7 +394,6 @@ ENDIF(COMMAND cmake_policy)
  # This is the shortcut to finding GLU, GLUT and OpenGL if they are properly installed on your system
  # This should be the case.
  
@@ -150,7 +171,7 @@ index a695b7172..e973062c7 100644
  IF (OPENGL_FOUND)
  	MESSAGE("OPENGL FOUND")
  	MESSAGE(${OPENGL_LIBRARIES})
-@@ -409,10 +488,10 @@ IF(BUILD_BULLET3)
+@@ -409,10 +493,10 @@ IF(BUILD_BULLET3)
  
  			OPTION(BUILD_OPENGL3_DEMOS "Set when you want to build the OpenGL3+ demos" OFF)
  		ELSE()
@@ -163,7 +184,7 @@ index a695b7172..e973062c7 100644
  	ENDIF()
  ELSE(BUILD_BULLET3)
  	unset(BUILD_OPENGL3_DEMOS CACHE)
-@@ -426,7 +505,7 @@ ELSE()
+@@ -426,7 +510,7 @@ ELSE()
  	ADD_DEFINITIONS(-DNO_OPENGL3)
  ENDIF(BUILD_OPENGL3_DEMOS)
  
@@ -172,7 +193,7 @@ index a695b7172..e973062c7 100644
  IF(BUILD_BULLET2_DEMOS)
  
  	IF(EXISTS ${BULLET_PHYSICS_SOURCE_DIR}/examples AND IS_DIRECTORY ${BULLET_PHYSICS_SOURCE_DIR}/examples)
-@@ -472,17 +551,17 @@ IF(INSTALL_LIBS)
+@@ -472,17 +556,17 @@ IF(INSTALL_LIBS)
  	SET(INCLUDE_INSTALL_DIR "include/bullet/" CACHE PATH "The subdirectory to the header prefix")
  	SET(PKGCONFIG_INSTALL_PREFIX "lib${LIB_SUFFIX}/pkgconfig/" CACHE STRING "Base directory for pkgconfig files")
  	IF(NOT MSVC)
@@ -193,7 +214,7 @@ index a695b7172..e973062c7 100644
  
  IF (BUILD_UNIT_TESTS)
  	ENABLE_TESTING()
-@@ -490,23 +569,22 @@ IF (BUILD_UNIT_TESTS)
+@@ -490,23 +574,22 @@ IF (BUILD_UNIT_TESTS)
  ENDIF()
  
  set (BULLET_CONFIG_CMAKE_PATH lib${LIB_SUFFIX}/cmake/bullet )
@@ -333,3 +354,15 @@ index 000000000..20dbdea0f
 +
 +</package>
 \ No newline at end of file
+diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
+index c30125c53..553971795 100644
+--- a/src/CMakeLists.txt
++++ b/src/CMakeLists.txt
+@@ -1,6 +1,6 @@
+ 
+ IF(BUILD_BULLET3)
+-	SUBDIRS(  Bullet3OpenCL Bullet3Serialize/Bullet2FileLoader Bullet3Dynamics Bullet3Collision Bullet3Geometry )
++	SUBDIRS( Bullet3Serialize/Bullet2FileLoader Bullet3Dynamics Bullet3Collision Bullet3Geometry )
+ ENDIF(BUILD_BULLET3)
+ 
+ 

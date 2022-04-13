@@ -11,6 +11,57 @@ index cba176b37f..1b908ccd96 100644
  endif()
  
  configure_package(NAMESPACE tesseract)
+diff --git a/tesseract_collision/bullet/CMakeLists.txt b/tesseract_collision/bullet/CMakeLists.txt
+index 21f232ab2b..9087f4a3ef 100644
+--- a/tesseract_collision/bullet/CMakeLists.txt
++++ b/tesseract_collision/bullet/CMakeLists.txt
+@@ -27,10 +27,10 @@ else()
+   set(BULLET_LIBRARY_DIRS_ABS ${BULLET_LIBRARY_DIRS})
+ endif()
+ 
+-if(WIN32) # This was required for windows to find things in tesseract_ext before the system which is an issue in ros-win
++#if(WIN32) # This was required for windows to find things in tesseract_ext before the system which is an issue in ros-win
+   include_directories(BEFORE "${BULLET_INCLUDE_DIRS_ABS}")
+   link_directories(BEFORE "${BULLET_LIBRARY_DIRS_ABS}")
+-endif()
++#endif()
+ 
+ find_library(HACD_LIBRARY HACD HINTS ${BULLET_LIBRARY_DIRS_ABS})
+ if(NOT HACD_LIBRARY)
+diff --git a/tesseract_collision/cmake/tesseract_collision-config.cmake.in b/tesseract_collision/cmake/tesseract_collision-config.cmake.in
+index 2467109d72..5a186e46d2 100644
+--- a/tesseract_collision/cmake/tesseract_collision-config.cmake.in
++++ b/tesseract_collision/cmake/tesseract_collision-config.cmake.in
+@@ -32,10 +32,10 @@ IF(NOT ${BULLET_DEFINITIONS} MATCHES ".*-DBT_USE_DOUBLE_PRECISION.*")
+   message(WARNING "Bullet does not appear to be build with double precision, current definitions: ${BULLET_DEFINITIONS}")
+ endif()
+ 
+-if (WIN32) # This was required for windows to find things in tesseract_ext before the system which is an issue in ros-win
++#if (WIN32) # This was required for windows to find things in tesseract_ext before the system which is an issue in ros-win
+   include_directories(BEFORE "${BULLET_ROOT_DIR}/${BULLET_INCLUDE_DIRS}")
+   link_directories(BEFORE "${BULLET_ROOT_DIR}/${BULLET_LIBRARY_DIRS}")
+-endif()
++#endif()
+ 
+ if(NOT TARGET console_bridge::console_bridge)
+   add_library(console_bridge::console_bridge INTERFACE IMPORTED)
+diff --git a/tesseract_collision/vhacd/CMakeLists.txt b/tesseract_collision/vhacd/CMakeLists.txt
+index 14af2a81b5..1d377b10a6 100644
+--- a/tesseract_collision/vhacd/CMakeLists.txt
++++ b/tesseract_collision/vhacd/CMakeLists.txt
+@@ -12,10 +12,10 @@ if(NOT
+     WARNING "Bullet does not appear to be build with double precision, current definitions: ${BULLET_DEFINITIONS}")
+ endif()
+ 
+-if(WIN32) # This was required for windows to find things in tesseract_ext before the system which is an issue in ros-win
++#if(WIN32) # This was required for windows to find things in tesseract_ext before the system which is an issue in ros-win
+   include_directories(BEFORE "${BULLET_ROOT_DIR}/${BULLET_INCLUDE_DIRS}")
+   link_directories(BEFORE "${BULLET_ROOT_DIR}/${BULLET_LIBRARY_DIRS}")
+-endif()
++#endif()
+ 
+ # Third party vhacd
+ include("${CMAKE_CURRENT_SOURCE_DIR}/../cmake/vhacd_common.cmake")
 diff --git a/tesseract_common/cmake/tesseract_macros.cmake b/tesseract_common/cmake/tesseract_macros.cmake
 index e346e0e5e7..2d9c673447 100644
 --- a/tesseract_common/cmake/tesseract_macros.cmake
