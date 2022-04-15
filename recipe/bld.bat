@@ -1,4 +1,4 @@
-set CXXFLAGS=%CXXFLAGS% -D_ENABLE_EXTENDED_ALIGNED_STORAGE=1
+rem set CXXFLAGS=%CXXFLAGS% -D_ENABLE_EXTENDED_ALIGNED_STORAGE=1
 
 call colcon build --merge-install --install-base="%PREFIX%\opt\tesseract_robotics" ^
    --event-handlers console_cohesion+ ^
