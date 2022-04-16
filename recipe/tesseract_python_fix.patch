@@ -26,7 +26,7 @@ index ebd50e4..cf61c68 100644
 +file(TO_NATIVE_PATH ${CMAKE_INSTALL_PREFIX} CMAKE_INSTALL_PREFIX_NATIVE)
 +
 +install(CODE "message(STATUS \"Running setup.py in ${CMAKE_CURRENT_BINARY_DIR}/python\")
-+  execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install --no-deps --prefix=${CMAKE_INSTALL_PREFIX_NATIVE}
++  execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install --no-deps --target=${CMAKE_INSTALL_PREFIX_NATIVE}/lib/python3/dist-packages
 +  --ignore-installed . WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/python)")
  
  

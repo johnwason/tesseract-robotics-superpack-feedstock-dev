@@ -28,6 +28,21 @@ index 21f232ab2b..9087f4a3ef 100644
  
  find_library(HACD_LIBRARY HACD HINTS ${BULLET_LIBRARY_DIRS_ABS})
  if(NOT HACD_LIBRARY)
+diff --git a/tesseract_collision/bullet/src/bullet_cast_simple_manager.cpp b/tesseract_collision/bullet/src/bullet_cast_simple_manager.cpp
+index 3004af45d4..8ab5b20b6c 100644
+--- a/tesseract_collision/bullet/src/bullet_cast_simple_manager.cpp
++++ b/tesseract_collision/bullet/src/bullet_cast_simple_manager.cpp
+@@ -134,7 +134,9 @@ bool BulletCastSimpleManager::removeCollisionObject(const std::string& name)
+   auto it = link2cow_.find(name);
+   if (it != link2cow_.end())
+   {
+-    cows_.erase(std::find(cows_.begin(), cows_.end(), it->second));
++    cows_.erase(std::find_if(cows_.begin(), cows_.end(), [&name](const auto& p) {
++      return p->getName() == name;
++    }));
+     collision_objects_.erase(std::find(collision_objects_.begin(), collision_objects_.end(), name));
+     link2cow_.erase(name);
+     link2castcow_.erase(name);
 diff --git a/tesseract_collision/cmake/tesseract_collision-config.cmake.in b/tesseract_collision/cmake/tesseract_collision-config.cmake.in
 index 2467109d72..5a186e46d2 100644
 --- a/tesseract_collision/cmake/tesseract_collision-config.cmake.in
@@ -62,28 +77,6 @@ index 14af2a81b5..1d377b10a6 100644
  
  # Third party vhacd
  include("${CMAKE_CURRENT_SOURCE_DIR}/../cmake/vhacd_common.cmake")
-diff --git a/tesseract_common/cmake/tesseract_macros.cmake b/tesseract_common/cmake/tesseract_macros.cmake
-index e346e0e5e7..2d9c673447 100644
---- a/tesseract_common/cmake/tesseract_macros.cmake
-+++ b/tesseract_common/cmake/tesseract_macros.cmake
-@@ -79,7 +79,7 @@ macro(tesseract_variables)
-           -Wsign-conversion)
-       message(WARNING "Non-GNU compiler detected. If using AVX instructions, Eigen alignment issues may result.")
-     elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
--      set(TESSERACT_COMPILE_DEFINITIONS "_USE_MATH_DEFINES=ON")
-+      set(TESSERACT_COMPILE_DEFINITIONS "_USE_MATH_DEFINES=ON" "_ENABLE_EXTENDED_ALIGNED_STORAGE=1")
-       message(WARNING "Non-GNU compiler detected. If using AVX instructions, Eigen alignment issues may result.")
-     else()
-       message(WARNING "${CMAKE_CXX_COMPILER_ID} Unsupported compiler detected.")
-@@ -116,7 +116,7 @@ macro(tesseract_variables)
-           -Werror=sign-conversion)
-       message(WARNING "Non-GNU compiler detected. If using AVX instructions, Eigen alignment issues may result.")
-     elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
--      set(TESSERACT_COMPILE_DEFINITIONS "_USE_MATH_DEFINES=ON")
-+      set(TESSERACT_COMPILE_DEFINITIONS "_USE_MATH_DEFINES=ON" "_ENABLE_EXTENDED_ALIGNED_STORAGE=1")
-       message(WARNING "Non-GNU compiler detected. If using AVX instructions, Eigen alignment issues may result.")
-     else()
-       message(WARNING "${CMAKE_CXX_COMPILER_ID} Unsupported compiler detected.")
 diff --git a/tesseract_geometry/CMakeLists.txt b/tesseract_geometry/CMakeLists.txt
 index e77ef5a917..efd55cf918 100644
 --- a/tesseract_geometry/CMakeLists.txt
