@@ -1,6 +1,6 @@
 package:
   name: tesseract-robotics-superpack
-  version: 0.5.0dev0
+  version: 0.5.1dev0
 
 source:
   - git_url: https://github.com/ros-industrial/ros_industrial_cmake_boilerplate.git
