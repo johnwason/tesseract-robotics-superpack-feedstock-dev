@@ -1,5 +1,5 @@
 diff --git a/tesseract_python/CMakeLists.txt b/tesseract_python/CMakeLists.txt
-index ebd50e4..cf61c68 100644
+index ebd50e4..89e374f 100644
 --- a/tesseract_python/CMakeLists.txt
 +++ b/tesseract_python/CMakeLists.txt
 @@ -23,6 +23,7 @@ else()
@@ -26,11 +26,27 @@ index ebd50e4..cf61c68 100644
 +file(TO_NATIVE_PATH ${CMAKE_INSTALL_PREFIX} CMAKE_INSTALL_PREFIX_NATIVE)
 +
 +install(CODE "message(STATUS \"Running setup.py in ${CMAKE_CURRENT_BINARY_DIR}/python\")
-+  execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install --no-deps --target=${CMAKE_INSTALL_PREFIX_NATIVE}/lib/python3/dist-packages
++  execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install --no-deps --target=${CMAKE_INSTALL_PREFIX_NATIVE}/lib/site-packages
 +  --ignore-installed . WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/python)")
  
  
    # Allows Colcon to find non-Ament packages when using workspace underlays
+@@ -158,13 +155,9 @@ endif()
+   file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/share/${PROJECT_NAME}/hook/ament_prefix_path.dsv "prepend-non-duplicate;AMENT_PREFIX_PATH;")
+   install(FILES ${CMAKE_CURRENT_BINARY_DIR}/share/${PROJECT_NAME}/hook/ament_prefix_path.dsv DESTINATION share/${PROJECT_NAME}/hook)
+ 
+-if (${PYTHON_VERSION_MAJOR} LESS 3)
+-  file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/share/${PROJECT_NAME}/hook/python_path.dsv "prepend-non-duplicate;PYTHONPATH;lib/python2.7/dist-packages")
++  file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/share/${PROJECT_NAME}/hook/python_path.dsv "prepend-non-duplicate;PYTHONPATH;lib/site-packages")
+   install(FILES ${CMAKE_CURRENT_BINARY_DIR}/share/${PROJECT_NAME}/hook/python_path.dsv DESTINATION share/${PROJECT_NAME}/hook)
+-else()
+-  file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/share/${PROJECT_NAME}/hook/python_path.dsv "prepend-non-duplicate;PYTHONPATH;lib/python3/dist-packages")
+-  install(FILES ${CMAKE_CURRENT_BINARY_DIR}/share/${PROJECT_NAME}/hook/python_path.dsv DESTINATION share/${PROJECT_NAME}/hook)
+-endif()
++
+   
+ if(TESSERACT_ENABLE_TESTING)
+   enable_testing()
 diff --git a/tesseract_python/swig/eigen_geometry.i b/tesseract_python/swig/eigen_geometry.i
 index 022f897..de779ec 100644
 --- a/tesseract_python/swig/eigen_geometry.i
@@ -56,3 +72,44 @@ index 87dde6c..edc6808 100644
  namespace std
  {
    template<typename T> struct remove_reference<swig::SwigPySequence_Ref<T>>
+diff --git a/tesseract_viewer_python/CMakeLists.txt b/tesseract_viewer_python/CMakeLists.txt
+index b9a476a..ea16257 100644
+--- a/tesseract_viewer_python/CMakeLists.txt
++++ b/tesseract_viewer_python/CMakeLists.txt
+@@ -31,7 +31,7 @@ STRING (REGEX REPLACE "<version>([0-9]+\\.[0-9]+\\.[0-9]+)</version>" "\\1" tess
+ STRING (STRIP ${tesseract_viewer_python_version2} tesseract_viewer_python_version)
+ MESSAGE(STATUS "tesseract_viewer_python version: ${tesseract_viewer_python_version}")
+ 
+-configure_file("${CMAKE_CURRENT_SOURCE_DIR}/cmake/setup.py.in" "${CMAKE_CURRENT_BINARY_DIR}/python/setup.py" @ONLY)
++configure_file("${CMAKE_CURRENT_SOURCE_DIR}/cmake/setup.py.in" "${CMAKE_CURRENT_SOURCE_DIR}/setup.py" @ONLY)
+ 
+ set(enable_setuptools_deb_layout OFF)
+ if(EXISTS "/etc/debian_version")
+@@ -43,20 +43,18 @@ if(SETUPTOOLS_DEB_LAYOUT)
+   set(SETUPTOOLS_ARG_EXTRA "--install-layout=deb")
+ endif()
+ 
+-install(CODE "message(STATUS \"Running setup.py in ${CMAKE_CURRENT_SOURCE_DIR}\")
+-execute_process(COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/python/setup.py install -f
+---root=/ --prefix=${CMAKE_INSTALL_PREFIX} ${SETUPTOOLS_ARG_EXTRA} --single-version-externally-managed WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})")
++file(TO_NATIVE_PATH ${CMAKE_INSTALL_PREFIX} CMAKE_INSTALL_PREFIX_NATIVE)
+ 
++install(CODE "message(STATUS \"Running setup.py in ${CMAKE_CURRENT_BINARY_DIR}/python\")
++  execute_process(COMMAND ${PYTHON_EXECUTABLE} -m pip install --no-deps --target=${CMAKE_INSTALL_PREFIX_NATIVE}/lib/site-packages
++  --ignore-installed . WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})")
+   # Allows Colcon to find non-Ament packages when using workspace underlays
+   file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/share/ament_index/resource_index/packages/${PROJECT_NAME} "")
+   install(FILES ${CMAKE_CURRENT_BINARY_DIR}/share/ament_index/resource_index/packages/${PROJECT_NAME} DESTINATION share/ament_index/resource_index/packages)
+   file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/share/${PROJECT_NAME}/hook/ament_prefix_path.dsv "prepend-non-duplicate;AMENT_PREFIX_PATH;")
+   install(FILES ${CMAKE_CURRENT_BINARY_DIR}/share/${PROJECT_NAME}/hook/ament_prefix_path.dsv DESTINATION share/${PROJECT_NAME}/hook)
+ 
+-if (${PYTHON_VERSION_MAJOR} LESS 3)
+-  file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/share/${PROJECT_NAME}/hook/python_path.dsv "prepend-non-duplicate;PYTHONPATH;lib/python2.7/dist-packages")
+-  install(FILES ${CMAKE_CURRENT_BINARY_DIR}/share/${PROJECT_NAME}/hook/python_path.dsv DESTINATION share/${PROJECT_NAME}/hook)
+-else()
+-  file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/share/${PROJECT_NAME}/hook/python_path.dsv "prepend-non-duplicate;PYTHONPATH;lib/python3/dist-packages")
++
++  file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/share/${PROJECT_NAME}/hook/python_path.dsv "prepend-non-duplicate;PYTHONPATH;lib/site-packages")
+   install(FILES ${CMAKE_CURRENT_BINARY_DIR}/share/${PROJECT_NAME}/hook/python_path.dsv DESTINATION share/${PROJECT_NAME}/hook)
+-endif()
++
