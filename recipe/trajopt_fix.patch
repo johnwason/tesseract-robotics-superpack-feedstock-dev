@@ -5,7 +5,7 @@ index 5a4830b..a4bb14d 100644
 @@ -1,5 +1,5 @@
  cmake_minimum_required(VERSION 3.10.0)
 -project(trajopt VERSION 0.1.0 LANGUAGES CXX)
-+project(trajopt VERSION 0.1.0 LANGUAGES CXX C)
++project(trajopt VERSION 0.1.0 LANGUAGES CXX)
  
  if(WIN32)
    set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
@@ -53,7 +53,7 @@ index 59c143e..39931d0 100644
 @@ -1,5 +1,5 @@
  cmake_minimum_required(VERSION 3.10.0)
 -project(vhacd VERSION 0.1.0 LANGUAGES CXX)
-+project(vhacd VERSION 0.1.0 LANGUAGES CXX C)
++project(vhacd VERSION 0.1.0 LANGUAGES CXX)
  
  find_package(Eigen3 REQUIRED)
  find_package(OpenMP REQUIRED)
@@ -64,7 +64,7 @@ index 8061798..d793c18 100644
 @@ -1,5 +1,5 @@
  cmake_minimum_required(VERSION 3.10.0)
 -project(trajopt_ifopt VERSION 0.1.0 LANGUAGES CXX)
-+project(trajopt_ifopt VERSION 0.1.0 LANGUAGES CXX C)
++project(trajopt_ifopt VERSION 0.1.0 LANGUAGES CXX)
  
  if(WIN32)
    set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
@@ -89,7 +89,7 @@ index 673e508..786ed96 100644
 @@ -1,5 +1,5 @@
  cmake_minimum_required(VERSION 3.10.0)
 -project(trajopt_sqp VERSION 0.1.0 LANGUAGES CXX)
-+project(trajopt_sqp VERSION 0.1.0 LANGUAGES CXX C)
++project(trajopt_sqp VERSION 0.1.0 LANGUAGES CXX)
  
  if(WIN32)
    set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
@@ -100,7 +100,7 @@ index 7067680..f3f7d55 100644
 @@ -1,5 +1,5 @@
  cmake_minimum_required(VERSION 3.10.0)
 -project(trajopt_sco VERSION 0.1.0 LANGUAGES CXX)
-+project(trajopt_sco VERSION 0.1.0 LANGUAGES CXX C)
++project(trajopt_sco VERSION 0.1.0 LANGUAGES CXX)
  
  if(WIN32)
    set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
@@ -171,7 +171,7 @@ index 9f6de79..c79f409 100644
 @@ -1,5 +1,5 @@
  cmake_minimum_required(VERSION 3.10.0)
 -project(trajopt_utils VERSION 0.1.0 LANGUAGES CXX)
-+project(trajopt_utils VERSION 0.1.0 LANGUAGES CXX C)
++project(trajopt_utils VERSION 0.1.0 LANGUAGES CXX)
  
  include(cmake/trajopt_macros.cmake)
  
