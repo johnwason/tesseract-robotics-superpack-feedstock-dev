@@ -8,7 +8,7 @@ on: [push, pull_request]
 jobs:
   build:
     name: ${{ matrix.CONFIG }}
-    runs-on: ${{ matrix.os_inst }}
+    runs-on: ${{ matrix.os }}-latest
     strategy:
       fail-fast: false
       matrix:
@@ -18,23 +18,19 @@ jobs:
             UPLOAD_PACKAGES: True
             DOCKER_IMAGE: quay.io/condaforge/linux-anvil-cos7-x86_64
             os: ubuntu
-            os_inst: ubuntu-latest
           - CONFIG: linux_64_python3.9.____cpython
             SHORT_CONFIG: linux_64_python3.9.____cpython
             UPLOAD_PACKAGES: True
             DOCKER_IMAGE: quay.io/condaforge/linux-anvil-cos7-x86_64
             os: ubuntu
-            os_inst: ubuntu-latest
           - CONFIG: win_64_python3.8.____cpython
             SHORT_CONFIG: win_64_python3.8.____cpython
             UPLOAD_PACKAGES: True
             os: windows
-            os_inst: windows-2019
           - CONFIG: win_64_python3.9.____cpython
             SHORT_CONFIG: win_64_python3.9.____cpython
             UPLOAD_PACKAGES: True
             os: windows
-            os_inst: windows-2019
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
@@ -94,6 +90,10 @@ jobs:
         setup_conda_rc .\ ".\recipe" .\.ci_support\%CONFIG%.yaml
         if errorlevel 1 exit 1
         
+
+        if EXIST LICENSE.txt (
+          copy LICENSE.txt "recipe\\recipe-scripts-license.txt"
+        )
         conda.exe mambabuild "recipe" -m .ci_support\%CONFIG%.yaml
         if errorlevel 1 exit 1
         set "FEEDSTOCK_NAME=%GITHUB_REPOSITORY:*/=%"
