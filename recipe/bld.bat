@@ -1,10 +1,9 @@
-rem set CXXFLAGS=%CXXFLAGS% -D_ENABLE_EXTENDED_ALIGNED_STORAGE=1
-rem set CXXFLAGS=%CXXFLAGS% -DEIGEN_DONT_ALIGN=1 -DEIGEN_DONT_VECTORIZE=1
+set CXXFLAGS=%CXXFLAGS% -DEIGEN_DONT_ALIGN=1 -DEIGEN_DONT_VECTORIZE=1
 set CXXFLAGS=%CXXFLAGS% /std:c++17
 
 call colcon build --merge-install --install-base="%PREFIX%\opt\tesseract_robotics" ^
    --event-handlers console_cohesion+ ^
-   --packages-ignore gtest osqp osqp_eigen ^
+   --packages-ignore gtest osqp osqp_eigen tesseract_examples trajopt_ifopt trajopt_sqp ^
    --cmake-args -GNinja -DCMAKE_BUILD_TYPE=Release ^
    -DCMAKE_CXX_FLAGS_RELWITHDEBINFO:STRING="/MD /O2 /Ob0 /Zi /DNDEBUG" ^
    -DCMAKE_RELWITHDEBINFO_POSTFIX="" ^
@@ -15,7 +14,9 @@ call colcon build --merge-install --install-base="%PREFIX%\opt\tesseract_robotic
    -DCMAKE_PREFIX_PATH:PATH="%LIBRARY_PREFIX%" ^
    -DTESSERACT_ENABLE_CLANG_TIDY=OFF ^
    -DTESSERACT_ENABLE_CODE_COVERAGE=OFF ^
-   -DPYTHON_EXECUTABLE="%PREFIX%\python.exe"
+   -DPYTHON_EXECUTABLE="%PREFIX%\python.exe" ^
+   -DTESSERACT_ENABLE_EXAMPLES=OFF ^
+   -DTESSERACT_BUILD_TRAJOPT_IFOPT=OFF ^
 
 if %errorlevel% neq 0 exit /b %errorlevel%
 
