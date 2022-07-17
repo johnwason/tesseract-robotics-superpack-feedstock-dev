@@ -22,9 +22,13 @@ source:
   - git_url: https://github.com/swri-robotics/descartes_light.git
     folder: src/descartes_light
     git_rev: {{ descartes_light_version }}
+    patches:
+      - descartes_cpp17.patch
   - git_url: https://github.com/johnwason/tesseract
     git_rev: pr/BulletLibsAbsPath
     folder: src/tesseract
+    patches:
+      - tesseract_boost_fix.patch
   - git_url: https://github.com/tesseract-robotics/trajopt.git
     folder: src/trajopt
     git_rev: {{ trajopt_version }}
@@ -33,11 +37,13 @@ source:
   - git_url: https://github.com/tesseract-robotics/tesseract_planning.git
     folder: src/tesseract_planning
     git_rev: 0c0983699f4afab3251daae6665bc0c9336f97f0
+    patches:
+      - tesseract_planning_boost_fix.patch
   - git_url: https://github.com/tesseract-robotics/tesseract_python.git
     folder: src/tesseract_python
     git_rev: d802447fa3e86f3aa1edf55fa919f348cbc2db90
-    # patches:
-    #   - tesseract_python_win_fix.patch # [win]
+    patches:
+       - tesseract_python_fix.patch
 
 requirements:
   build:

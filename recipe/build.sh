@@ -14,7 +14,8 @@ colcon build --merge-install --install-base="$PREFIX/opt/tesseract_robotics" \
    -DTESSERACT_ENABLE_CODE_COVERAGE=OFF \
    -DTaskflow_DIR=${PREFIX}/lib64/cmake/Taskflow \
    -DTESSERACT_ENABLE_EXAMPLES=OFF \
-   -DTESSERACT_BUILD_TRAJOPT_IFOPT=OFF
+   -DTESSERACT_BUILD_TRAJOPT_IFOPT=OFF \
+   -DSETUPTOOLS_DEB_LAYOUT=OFF
 
 for CHANGE in "activate" "deactivate"
 do

@@ -1,0 +1,96 @@
+diff --git a/tesseract_common/src/allowed_collision_matrix.cpp b/tesseract_common/src/allowed_collision_matrix.cpp
+index db3c74714..a81f23bd0 100644
+--- a/tesseract_common/src/allowed_collision_matrix.cpp
++++ b/tesseract_common/src/allowed_collision_matrix.cpp
+@@ -28,6 +28,7 @@ TESSERACT_COMMON_IGNORE_WARNINGS_PUSH
+ #include <boost/serialization/access.hpp>
+ #include <boost/serialization/nvp.hpp>
+ #include <boost/serialization/utility.hpp>
++#include <boost/serialization/map.hpp>
+ #include <boost/serialization/unordered_map.hpp>
+ #include <memory>
+ TESSERACT_COMMON_IGNORE_WARNINGS_POP
+diff --git a/tesseract_common/src/collision_margin_data.cpp b/tesseract_common/src/collision_margin_data.cpp
+index 2a0483930..059406ade 100644
+--- a/tesseract_common/src/collision_margin_data.cpp
++++ b/tesseract_common/src/collision_margin_data.cpp
+@@ -28,6 +28,7 @@ TESSERACT_COMMON_IGNORE_WARNINGS_PUSH
+ #include <boost/serialization/access.hpp>
+ #include <boost/serialization/nvp.hpp>
+ #include <boost/serialization/utility.hpp>
++#include <boost/serialization/map.hpp>
+ #include <boost/serialization/unordered_map.hpp>
+ #include <memory>
+ TESSERACT_COMMON_IGNORE_WARNINGS_POP
+diff --git a/tesseract_environment/src/commands/change_joint_acceleration_limits_command.cpp b/tesseract_environment/src/commands/change_joint_acceleration_limits_command.cpp
+index 4a24aba0f..20364ee14 100644
+--- a/tesseract_environment/src/commands/change_joint_acceleration_limits_command.cpp
++++ b/tesseract_environment/src/commands/change_joint_acceleration_limits_command.cpp
+@@ -27,6 +27,7 @@
+ TESSERACT_COMMON_IGNORE_WARNINGS_PUSH
+ #include <boost/serialization/access.hpp>
+ #include <boost/serialization/nvp.hpp>
++#include <boost/serialization/map.hpp>
+ #include <boost/serialization/unordered_map.hpp>
+ #include <memory>
+ #include <string>
+diff --git a/tesseract_environment/src/commands/change_joint_position_limits_command.cpp b/tesseract_environment/src/commands/change_joint_position_limits_command.cpp
+index fc0e4ffe0..2abcfca10 100644
+--- a/tesseract_environment/src/commands/change_joint_position_limits_command.cpp
++++ b/tesseract_environment/src/commands/change_joint_position_limits_command.cpp
+@@ -27,6 +27,7 @@
+ TESSERACT_COMMON_IGNORE_WARNINGS_PUSH
+ #include <boost/serialization/access.hpp>
+ #include <boost/serialization/nvp.hpp>
++#include <boost/serialization/map.hpp>
+ #include <boost/serialization/unordered_map.hpp>
+ #include <memory>
+ #include <string>
+diff --git a/tesseract_environment/src/commands/change_joint_velocity_limits_command.cpp b/tesseract_environment/src/commands/change_joint_velocity_limits_command.cpp
+index 2125faf2b..ed7ac1720 100644
+--- a/tesseract_environment/src/commands/change_joint_velocity_limits_command.cpp
++++ b/tesseract_environment/src/commands/change_joint_velocity_limits_command.cpp
+@@ -27,6 +27,7 @@
+ TESSERACT_COMMON_IGNORE_WARNINGS_PUSH
+ #include <boost/serialization/access.hpp>
+ #include <boost/serialization/nvp.hpp>
++#include <boost/serialization/map.hpp>
+ #include <boost/serialization/unordered_map.hpp>
+ #include <memory>
+ #include <string>
+diff --git a/tesseract_environment/src/commands/change_link_collision_enabled_command.cpp b/tesseract_environment/src/commands/change_link_collision_enabled_command.cpp
+index 31954e69d..043ca0235 100644
+--- a/tesseract_environment/src/commands/change_link_collision_enabled_command.cpp
++++ b/tesseract_environment/src/commands/change_link_collision_enabled_command.cpp
+@@ -27,6 +27,7 @@
+ TESSERACT_COMMON_IGNORE_WARNINGS_PUSH
+ #include <boost/serialization/access.hpp>
+ #include <boost/serialization/nvp.hpp>
++#include <boost/serialization/map.hpp>
+ #include <boost/serialization/unordered_map.hpp>
+ #include <memory>
+ #include <string>
+diff --git a/tesseract_environment/src/commands/change_link_origin_command.cpp b/tesseract_environment/src/commands/change_link_origin_command.cpp
+index 4bc4544c1..e27aa81ad 100644
+--- a/tesseract_environment/src/commands/change_link_origin_command.cpp
++++ b/tesseract_environment/src/commands/change_link_origin_command.cpp
+@@ -27,6 +27,7 @@
+ TESSERACT_COMMON_IGNORE_WARNINGS_PUSH
+ #include <boost/serialization/access.hpp>
+ #include <boost/serialization/nvp.hpp>
++#include <boost/serialization/map.hpp>
+ #include <boost/serialization/unordered_map.hpp>
+ #include <memory>
+ #include <string>
+diff --git a/tesseract_scene_graph/src/graph.cpp b/tesseract_scene_graph/src/graph.cpp
+index 0f67bea05..7512e0487 100644
+--- a/tesseract_scene_graph/src/graph.cpp
++++ b/tesseract_scene_graph/src/graph.cpp
+@@ -38,6 +38,7 @@ TESSERACT_COMMON_IGNORE_WARNINGS_PUSH
+ #include <boost/serialization/nvp.hpp>
+ #include <boost/serialization/shared_ptr.hpp>
+ #include <boost/serialization/split_member.hpp>
++#include <boost/serialization/map.hpp>
+ #include <boost/serialization/unordered_map.hpp>
+ #include <boost/serialization/utility.hpp>
+ TESSERACT_COMMON_IGNORE_WARNINGS_POP
