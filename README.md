@@ -33,16 +33,41 @@ conda config --add channels tesseract-robotics
 conda config --set channel_priority strict
 ```
 
-Once the `tesseract-robotics` channel has been enabled, `tesseract-robotics-superpack` can be installed with:
+Once the `tesseract-robotics` channel has been enabled, `tesseract-robotics-superpack` can be installed with `conda`:
 
 ```
 conda install tesseract-robotics-superpack
 ```
 
-It is possible to list all of the versions of `tesseract-robotics-superpack` available on your platform with:
+or with `mamba`:
+
+```
+mamba install tesseract-robotics-superpack
+```
+
+It is possible to list all of the versions of `tesseract-robotics-superpack` available on your platform with `conda`:
 
 ```
 conda search tesseract-robotics-superpack --channel tesseract-robotics
+```
+
+or with `mamba`:
+
+```
+mamba search tesseract-robotics-superpack --channel tesseract-robotics
+```
+
+Alternatively, `mamba repoquery` may provide more information:
+
+```
+# Search all versions available on your platform:
+mamba repoquery search tesseract-robotics-superpack --channel tesseract-robotics
+
+# List packages depending on `tesseract-robotics-superpack`:
+mamba repoquery whoneeds tesseract-robotics-superpack --channel tesseract-robotics
+
+# List dependencies of `tesseract-robotics-superpack`:
+mamba repoquery depends tesseract-robotics-superpack --channel tesseract-robotics
 ```
 
 

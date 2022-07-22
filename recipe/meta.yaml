@@ -1,56 +1,49 @@
+{% set version = "0.6.0" %}
+{% set ros_industrial_cmake_boilerplate_version = "0.3.0" %}
+{% set opw_kinematics_version = "0.4.4" %}
+{% set tesseract_version = "0.13.0" %}
+{% set tesseract_planning_version = "0.12.0" %}
+{% set trajopt_version = "0.3.0" %}
+{% set descartes_light_version = "0.3.1" %}
+
 package:
   name: tesseract-robotics-superpack
-  version: 0.5.1dev0
+  version: {{ version }}
 
 source:
   - git_url: https://github.com/ros-industrial/ros_industrial_cmake_boilerplate.git
-    git_rev: 0.2.14
+    git_rev: {{ ros_industrial_cmake_boilerplate_version }}
     folder: src/ros_industrial_cmake_boilerplate
   - git_url: https://github.com/Jmeyer1292/opw_kinematics.git
     folder: src/opw_kinematics
-    git_rev: 0.4.4
+    git_rev: {{ opw_kinematics_version }}
     patches:
       - opw_interface_fix.patch
-  - git_url: https://github.com/ethz-adrl/ifopt.git
-    folder: src/ifopt
-    git_rev: 40a6c8c14d1ab9789c342203d1fb3046eae07669
-    patches:
-      - ifopt_fix_win_find_ipopt.patch # [win]
-      - ifopt_disable_build_tests.patch # [linux]
   - git_url: https://github.com/swri-robotics/descartes_light.git
     folder: src/descartes_light
-    git_rev: 0.3.0
+    git_rev: {{ descartes_light_version }}
     patches:
       - descartes_cpp17.patch
-  - git_url: https://github.com/tesseract-robotics/tesseract.git
+  - git_url: https://github.com/johnwason/tesseract
+    git_rev: pr/BulletLibsAbsPath
     folder: src/tesseract
-    git_rev: 0.8.3
-    git_depth: 50
     patches:
-      - tesseract_disable_examples.patch
+      - tesseract_boost_fix.patch
   - git_url: https://github.com/tesseract-robotics/trajopt.git
     folder: src/trajopt
-    git_rev: 0.2.2
+    git_rev: {{ trajopt_version }}
     patches:
       - trajopt_fix.patch
   - git_url: https://github.com/tesseract-robotics/tesseract_planning.git
     folder: src/tesseract_planning
-    git_rev: 0.9.3
-    git_depth: 50
+    git_rev: 0c0983699f4afab3251daae6665bc0c9336f97f0
     patches:
-      - tesseract_planning_fix.patch
+      - tesseract_planning_boost_fix.patch
   - git_url: https://github.com/tesseract-robotics/tesseract_python.git
     folder: src/tesseract_python
-    git_rev: 43e77ece6386eed6e616db46661727f33fed88e9
-    git_depth: 50
+    git_rev: d802447fa3e86f3aa1edf55fa919f348cbc2db90
     patches:
-      - tesseract_python_fix.patch
-      - tesseract_python_win_fix.patch # [win]
-  - git_url: https://github.com/bulletphysics/bullet3.git
-    folder: src/bullet
-    git_rev: "3.21"
-    patches:
-      - bullet3_fix.patch
+       - tesseract_python_fix.patch
 
 requirements:
   build:
@@ -92,6 +85,7 @@ requirements:
     - numpy
     - pip
     - yaml-cpp
+    - bullet-cpp
     - xorg-libx11    # [unix]
     - xorg-libxext   # [unix]
   run:
@@ -116,6 +110,7 @@ requirements:
     - python
     - numpy
     - yaml-cpp
+    - bullet-cpp
     - xorg-libx11    # [unix]
     - xorg-libxext   # [unix]
 
