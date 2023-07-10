@@ -1,11 +1,11 @@
-About tesseract-robotics-superpack
-==================================
+About tesseract-robotics-superpack-feedstock
+============================================
+
+Feedstock license: [BSD-3-Clause](https://github.com/tesseract-robotics/tesseract-robotics-superpack-feedstock/blob/main/LICENSE.txt)
 
 Home: https://github.com/ros-industrial-consortium/tesseract
 
 Package license: 
-
-Feedstock license: [BSD-3-Clause](https://github.com/tesseract-robotics/tesseract-robotics-superpack-feedstock/blob/master/LICENSE.txt)
 
 Summary: Tesseract robotics motion planning framework
 
