@@ -1,0 +1,1482 @@
+diff --git a/.clang-tidy b/.clang-tidy
+index 2d9e538..03792ea 100644
+--- a/.clang-tidy
++++ b/.clang-tidy
+@@ -72,7 +72,6 @@ WarningsAsErrors: >
+     -readability-identifier-length,
+     -readability-suspicious-call-argument
+ HeaderFilterRegex: '.*'
+-AnalyzeTemporaryDtors: false
+ FormatStyle:     none
+ CheckOptions:
+   - key:             modernize-use-override.AllowOverrideAndFinal
+@@ -83,4 +82,6 @@ CheckOptions:
+     value:           '1'
+   - key:             cppcoreguidelines-pro-type-member-init.IgnoreArrays
+     value:           '1'
++ExtraArgs:
++  - '-std=c++17'
+ ...
+diff --git a/.github/workflows/conda.yml b/.github/workflows/conda.yml
+new file mode 100644
+index 0000000..56204d7
+--- /dev/null
++++ b/.github/workflows/conda.yml
+@@ -0,0 +1,81 @@
++name: Conda
++
++on:
++  push:
++    branches:
++      - master
++      - 'dev**'
++  pull_request:
++  release:
++    types:
++      - released
++
++jobs:
++  conda-win:
++    runs-on: windows-2019
++    defaults:
++      run:
++        shell: powershell
++    steps:
++    - uses: actions/checkout@v3
++      with:
++       path: workspace/src/trajopt
++    - name: install-depends
++      shell: cmd
++      run: |
++        python -m pip install vcstool -q
++    - name: vcs import
++      run: >
++        vcs import --input "${{ github.workspace }}/workspace/src/trajopt/.github/workflows/windows_dependencies.repos" workspace/src/
++    - uses: conda-incubator/setup-miniconda@v3
++      with:
++        channel-priority: strict
++        environment-file: workspace/src/trajopt/.github/workflows/conda/environment.yml       
++        use-mamba: true
++        auto-update-conda: true
++        activate-environment: tesseract-build
++    - name: build and test
++      run: |
++        conda info
++        conda list
++        mkdir conda
++        xcopy /E workspace\src\trajopt\.github\workflows\conda conda
++        cd conda
++        New-Item -Name conda-forge.yml -ItemType File
++        conda smithy regenerate
++        
++        conda mambabuild -m .ci_support/win_64_.yaml .
++
++  conda-linux:
++    runs-on: ubuntu-latest
++    defaults:
++      run:
++        shell: bash -el {0}
++    steps:
++    - uses: actions/checkout@v3
++      with:
++        path: workspace/src/trajopt
++    - name: install-depends
++      run: |
++        python -m pip install vcstool -q
++    - name: vcs import
++      run: >
++        vcs import --input "${{ github.workspace }}/workspace/src/trajopt/.github/workflows/windows_dependencies.repos" workspace/src/
++    - uses: conda-incubator/setup-miniconda@v3
++      with:
++        channel-priority: strict
++        environment-file: workspace/src/trajopt/.github/workflows/conda/environment.yml
++        use-mamba: true
++        auto-update-conda: true
++        activate-environment: tesseract-build
++    - name: build and test
++      run: |
++        conda info
++        conda list
++
++        cp -r workspace/src/trajopt/.github/workflows/conda ./conda
++        cd conda
++        touch conda-forge.yml
++        conda smithy regenerate
++        
++        conda mambabuild -m .ci_support/linux_64_.yaml .
+diff --git a/.github/workflows/conda/environment.yml b/.github/workflows/conda/environment.yml
+new file mode 100644
+index 0000000..909dc29
+--- /dev/null
++++ b/.github/workflows/conda/environment.yml
+@@ -0,0 +1,6 @@
++name: tesseract-build
++channels:
++  - conda-forge
++dependencies:
++  - boa
++  - conda-smithy
+\ No newline at end of file
+diff --git a/.github/workflows/conda/recipe/activate.bat b/.github/workflows/conda/recipe/activate.bat
+new file mode 100644
+index 0000000..0e01a3a
+--- /dev/null
++++ b/.github/workflows/conda/recipe/activate.bat
+@@ -0,0 +1,5 @@
++@if not defined CONDA_PREFIX goto:eof
++
++@call "%CONDA_PREFIX%\opt\tesseract_robotics\setup.bat"
++
++@set TESSERACT_PYTHON_DLL_PATH=%CONDA_PREFIX%\opt\tesseract_robotics\bin
+\ No newline at end of file
+diff --git a/.github/workflows/conda/recipe/activate.sh b/.github/workflows/conda/recipe/activate.sh
+new file mode 100644
+index 0000000..b4f0242
+--- /dev/null
++++ b/.github/workflows/conda/recipe/activate.sh
+@@ -0,0 +1 @@
++source "${CONDA_PREFIX}/opt/tesseract_robotics/setup.sh"
+\ No newline at end of file
+diff --git a/.github/workflows/conda/recipe/bld.bat b/.github/workflows/conda/recipe/bld.bat
+new file mode 100644
+index 0000000..1ca2459
+--- /dev/null
++++ b/.github/workflows/conda/recipe/bld.bat
+@@ -0,0 +1,45 @@
++set CXXFLAGS=%CXXFLAGS% -DEIGEN_DONT_ALIGN=1 -DEIGEN_DONT_VECTORIZE=1
++set CXXFLAGS=%CXXFLAGS% /std:c++17
++
++colcon build --merge-install --install-base="%PREFIX%\opt\tesseract_robotics" ^
++   --event-handlers console_cohesion+ desktop_notification- status- terminal_title- ^
++   --packages-ignore gtest osqp osqp_eigen tesseract_examples trajopt_ifopt trajopt_sqp ^
++   --cmake-args -GNinja -DCMAKE_BUILD_TYPE=Release ^
++   -DCMAKE_CXX_FLAGS_RELWITHDEBINFO:STRING="/MD /O2 /Ob0 /Zi /DNDEBUG" ^
++   -DCMAKE_RELWITHDEBINFO_POSTFIX="" ^
++   -DBUILD_SHARED_LIBS=ON ^
++   -DUSE_MSVC_RUNTIME_LIBRARY_DLL=ON ^
++   -DBUILD_IPOPT=OFF ^
++   -DBUILD_SNOPT=OFF ^
++   -DCMAKE_PREFIX_PATH:PATH="%LIBRARY_PREFIX%" ^
++   -DTESSERACT_ENABLE_CLANG_TIDY=OFF ^
++   -DTESSERACT_ENABLE_CODE_COVERAGE=OFF ^
++   -DPYTHON_EXECUTABLE="%PREFIX%\python.exe" ^
++   -DTESSERACT_ENABLE_EXAMPLES=OFF ^
++   -DTESSERACT_BUILD_TRAJOPT_IFOPT=OFF ^
++   -DTESSERACT_ENABLE_TESTING=OFF ^
++   -DTRAJOPT_ENABLE_TESTING=ON
++
++if %errorlevel% neq 0 exit /b %errorlevel%
++
++set TESSERACT_RESOURCE_PATH=%PREFIX%\opt\tesseract_robotics\share
++
++colcon test --event-handlers console_direct+ desktop_notification- status- terminal_title- ^
++   --return-code-on-test-failure ^
++   --packages-ignore gtest osqp osqp_eigen tesseract_examples trajopt_ifopt trajopt_sqp tesseract_common ^
++   tesseract_collision tesseract_environment tesseract_geometry tesseract_kinematics tesseract_scene_graph ^
++   tesseract_srdf tesseract_state_solver tesseract_support tesseract_urdf tesseract_visualization ^
++   --merge-install --install-base="%PREFIX%\opt\tesseract_robotics"
++
++if %errorlevel% neq 0 exit /b %errorlevel%
++
++setlocal EnableDelayedExpansion
++
++:: Copy the [de]activate scripts to %PREFIX%\etc\conda\[de]activate.d.
++:: This will allow them to be run on environment activation.
++for %%F in (activate deactivate) DO (
++    if not exist %PREFIX%\etc\conda\%%F.d mkdir %PREFIX%\etc\conda\%%F.d
++    copy %RECIPE_DIR%\%%F.bat %PREFIX%\etc\conda\%%F.d\%PKG_NAME%_%%F.bat
++)
++
++if %errorlevel% neq 0 exit /b %errorlevel%
+\ No newline at end of file
+diff --git a/.github/workflows/conda/recipe/build.sh b/.github/workflows/conda/recipe/build.sh
+new file mode 100644
+index 0000000..28dbdc0
+--- /dev/null
++++ b/.github/workflows/conda/recipe/build.sh
+@@ -0,0 +1,33 @@
++set -e
++
++ln -s $BUILD_PREFIX/bin/x86_64-conda-linux-gnu-gcc $BUILD_PREFIX/bin/gcc
++
++colcon build --merge-install --install-base="$PREFIX/opt/tesseract_robotics" \
++   --event-handlers console_cohesion+  \
++   --packages-ignore gtest osqp osqp_eigen tesseract_examples trajopt_ifopt trajopt_sqp \
++   --cmake-args -DCMAKE_BUILD_TYPE=Release \
++   -DBUILD_SHARED_LIBS=ON \
++   -DBUILD_IPOPT=OFF \
++   -DBUILD_SNOPT=OFF \
++   -DCMAKE_PREFIX_PATH:PATH="$PREFIX" \
++   -DTESSERACT_ENABLE_CLANG_TIDY=OFF \
++   -DTESSERACT_ENABLE_CODE_COVERAGE=OFF \
++   -DTESSERACT_ENABLE_EXAMPLES=OFF \
++   -DTESSERACT_BUILD_TRAJOPT_IFOPT=OFF \
++   -DSETUPTOOLS_DEB_LAYOUT=OFF \
++   -DTESSERACT_ENABLE_TESTING=ON \
++   -DTRAJOPT_ENABLE_TESTING=ON
++
++export TESSERACT_RESOURCE_PATH="$PREFIX/opt/tesseract_robotics/share"
++
++colcon test --event-handlers console_direct+  \
++   --return-code-on-test-failure \
++   --packages-ignore gtest osqp osqp_eigen tesseract_examples trajopt_ifopt trajopt_sqp tesseract_common \
++   --merge-install --install-base="$PREFIX/opt/tesseract_robotics" 
++
++
++for CHANGE in "activate" "deactivate"
++do
++    mkdir -p "${PREFIX}/etc/conda/${CHANGE}.d"
++    cp "${RECIPE_DIR}/${CHANGE}.sh" "${PREFIX}/etc/conda/${CHANGE}.d/${PKG_NAME}_${CHANGE}.sh"
++done
+\ No newline at end of file
+diff --git a/.github/workflows/conda/recipe/deactivate.bat b/.github/workflows/conda/recipe/deactivate.bat
+new file mode 100644
+index 0000000..e69de29
+diff --git a/.github/workflows/conda/recipe/deactivate.sh b/.github/workflows/conda/recipe/deactivate.sh
+new file mode 100644
+index 0000000..e69de29
+diff --git a/.github/workflows/conda/recipe/meta.yaml b/.github/workflows/conda/recipe/meta.yaml
+new file mode 100644
+index 0000000..e357739
+--- /dev/null
++++ b/.github/workflows/conda/recipe/meta.yaml
+@@ -0,0 +1,77 @@
++package:
++    name: trajopt
++    version: "0.1.0"
++
++source:
++    path: ../../workspace
++
++requirements:
++    build:
++      - {{ compiler('c') }}
++      - {{ compiler('cxx') }}
++      - gtest
++      - gmock
++      - cmake
++      - ninja # [win]
++      - make # [linux]
++      - pkg-config
++      - colcon-common-extensions 
++      - lcov
++      - {{ cdt('mesa-libgl-devel') }}    # [linux]
++      - {{ cdt('mesa-dri-drivers') }}    # [linux]
++      - git
++    host:
++      - boost-cpp 
++      - eigen 
++      - tinyxml2
++      - console_bridge
++      - assimp
++      - urdfdom
++      - fcl
++      - octomap 
++      - orocos-kdl 
++      - pcl
++      - gtest
++      - gmock
++      - pkg-config 
++      - xz
++      - flann
++      - jsoncpp
++      - yaml-cpp
++      - bullet-cpp
++      - xorg-libx11    # [unix]
++      - xorg-libxext   # [unix]
++      - blas
++      - osqp
++      - qpoases
++    run:
++      - boost-cpp
++      - eigen 
++      - tinyxml2
++      - console_bridge
++      - assimp
++      - urdfdom
++      - fcl
++      - octomap 
++      - orocos-kdl 
++      - pcl
++      - gtest
++      - gmock
++      - xz
++      - jsoncpp
++      - taskflow 
++      - yaml-cpp
++      - bullet-cpp
++      - xorg-libx11    # [unix]
++      - xorg-libxext   # [unix]
++      - blas
++      - osqp
++      - qpoases
++
++build:
++  skip: true # [py<37]
++  number: 0
++
++about:
++  home: https://github.com/ros-industrial-consortium/trajopt
++  summary: Trajopt motion planner
+\ No newline at end of file
+diff --git a/trajopt/include/trajopt/kinematic_terms.hpp b/trajopt/include/trajopt/kinematic_terms.hpp
+index aabd890..fc3518e 100644
+--- a/trajopt/include/trajopt/kinematic_terms.hpp
++++ b/trajopt/include/trajopt/kinematic_terms.hpp
+@@ -3,6 +3,7 @@
+ TRAJOPT_IGNORE_WARNINGS_PUSH
+ #include <Eigen/Core>
+ 
++#include <trajopt_common/utils.hpp>
+ #include <tesseract_environment/environment.h>
+ #include <tesseract_environment/utils.h>
+ #include <tesseract_kinematics/core/joint_group.h>
+@@ -15,6 +16,10 @@ TRAJOPT_IGNORE_WARNINGS_POP
+ 
+ namespace trajopt
+ {
++const double DEFAULT_EPSILON = 1e-5;
++
++using ErrorFunctionType = std::function<Eigen::VectorXd(const Eigen::Isometry3d&, const Eigen::Isometry3d&)>;
++
+ /**
+  * @brief Used to calculate the error for CartPoseTermInfo
+  * This is converted to a cost or constraint using TrajOptCostFromErrFunc or TrajOptConstraintFromErrFunc
+@@ -38,6 +43,10 @@ struct DynamicCartPoseErrCalculator : public TrajOptVectorOfVector
+   /** @brief A offset transform to be applied to target_frame_ location */
+   Eigen::Isometry3d target_frame_offset_;
+ 
++  /** @brief Error function for calculating the error in the position given the source and target positions
++   * this defaults to tesseract_common::calcTransformError if unset*/
++  ErrorFunctionType error_function{ nullptr };
++
+   /**
+    * @brief This is a vector of indices to be returned Default: {0, 1, 2, 3, 4, 5}
+    *
+@@ -52,16 +61,9 @@ struct DynamicCartPoseErrCalculator : public TrajOptVectorOfVector
+       std::string target_frame,
+       const Eigen::Isometry3d& source_frame_offset = Eigen::Isometry3d::Identity(),
+       const Eigen::Isometry3d& target_frame_offset = Eigen::Isometry3d::Identity(),
+-      Eigen::VectorXi indices = Eigen::Matrix<int, 1, 6>(std::vector<int>({ 0, 1, 2, 3, 4, 5 }).data()))
+-    : manip_(std::move(manip))
+-    , source_frame_(std::move(source_frame))
+-    , target_frame_(std::move(target_frame))
+-    , source_frame_offset_(source_frame_offset)
+-    , target_frame_offset_(target_frame_offset)
+-    , indices_(std::move(indices))
+-  {
+-    assert(indices_.size() <= 6);
+-  }
++      Eigen::VectorXi indices = Eigen::Matrix<int, 1, 6>(std::vector<int>({ 0, 1, 2, 3, 4, 5 }).data()),
++      Eigen::VectorXd lower_tolerance = {},
++      Eigen::VectorXd upper_tolerance = {});
+ 
+   void Plot(const tesseract_visualization::Visualization::Ptr& plotter, const Eigen::VectorXd& dof_vals) override;
+ 
+@@ -96,6 +98,9 @@ struct DynamicCartPoseJacCalculator : sco::MatrixOfVector
+    */
+   Eigen::VectorXi indices_;
+ 
++  /** @brief perturbation amount for calculating Jacobian */
++  double epsilon_;
++
+   DynamicCartPoseJacCalculator(
+       tesseract_kinematics::JointGroup::ConstPtr manip,
+       std::string source_frame,
+@@ -109,6 +114,7 @@ struct DynamicCartPoseJacCalculator : sco::MatrixOfVector
+     , target_frame_(std::move(target_frame))
+     , target_frame_offset_(target_frame_offset)
+     , indices_(std::move(indices))
++    , epsilon_(DEFAULT_EPSILON)
+   {
+     assert(indices_.size() <= 6);
+   }
+@@ -140,6 +146,10 @@ struct CartPoseErrCalculator : public TrajOptVectorOfVector
+   /** @brief indicates which link is active */
+   bool is_target_active_{ true };
+ 
++  /** @brief Error function for calculating the error in the position given the source and target positions
++   * this defaults to tesseract_common::calcTransformError if unset*/
++  ErrorFunctionType error_function_{ nullptr };
++
+   /**
+    * @brief This is a vector of indices to be returned Default: {0, 1, 2, 3, 4, 5}
+    *
+@@ -154,17 +164,9 @@ struct CartPoseErrCalculator : public TrajOptVectorOfVector
+       std::string target_frame,
+       const Eigen::Isometry3d& source_frame_offset = Eigen::Isometry3d::Identity(),
+       const Eigen::Isometry3d& target_frame_offset = Eigen::Isometry3d::Identity(),
+-      Eigen::VectorXi indices = Eigen::Matrix<int, 1, 6>(std::vector<int>({ 0, 1, 2, 3, 4, 5 }).data()))
+-    : manip_(std::move(manip))
+-    , source_frame_(std::move(source_frame))
+-    , source_frame_offset_(source_frame_offset)
+-    , target_frame_(std::move(target_frame))
+-    , target_frame_offset_(target_frame_offset)
+-    , indices_(std::move(indices))
+-  {
+-    is_target_active_ = manip_->isActiveLinkName(target_frame_);
+-    assert(indices_.size() <= 6);
+-  }
++      Eigen::VectorXi indices = Eigen::Matrix<int, 1, 6>(std::vector<int>({ 0, 1, 2, 3, 4, 5 }).data()),
++      Eigen::VectorXd lower_tolerance = {},
++      Eigen::VectorXd upper_tolerance = {});
+ 
+   void Plot(const tesseract_visualization::Visualization::Ptr& plotter, const Eigen::VectorXd& dof_vals) override;
+ 
+@@ -201,6 +203,9 @@ struct CartPoseJacCalculator : sco::MatrixOfVector
+    */
+   Eigen::VectorXi indices_;
+ 
++  /** @brief perturbation amount for calculating Jacobian */
++  double epsilon_;
++
+   CartPoseJacCalculator(
+       tesseract_kinematics::JointGroup::ConstPtr manip,
+       std::string source_frame,
+@@ -214,6 +219,7 @@ struct CartPoseJacCalculator : sco::MatrixOfVector
+     , target_frame_(std::move(target_frame))
+     , target_frame_offset_(target_frame_offset)
+     , indices_(std::move(indices))
++    , epsilon_(DEFAULT_EPSILON)
+   {
+     is_target_active_ = manip_->isActiveLinkName(target_frame_);
+     assert(indices_.size() <= 6);
+diff --git a/trajopt/include/trajopt/problem_description.hpp b/trajopt/include/trajopt/problem_description.hpp
+index 0c4cd9d..35b737d 100644
+--- a/trajopt/include/trajopt/problem_description.hpp
++++ b/trajopt/include/trajopt/problem_description.hpp
+@@ -295,6 +295,16 @@ struct DynamicCartPoseTermInfo : public TermInfo
+   Eigen::Isometry3d source_frame_offset;
+   /** @brief A Static transform to be applied to target_ location */
+   Eigen::Isometry3d target_frame_offset;
++  /** @brief Distance below waypoint that is allowed. Should be size = 6. First 3 elements are dx, dy, dz. The last 3
++   * elements are angle axis error allowed (Eigen::AngleAxisd.axis() * Eigen::AngleAxisd.angle()) */
++  Eigen::VectorXd lower_tolerance;
++  /** @brief Distance above waypoint that is allowed. Should be size = 6. First 3 elements are dx, dy, dz. The last 3
++   * elements are angle axis error allowed (Eigen::AngleAxisd.axis() * Eigen::AngleAxisd.angle())*/
++  Eigen::VectorXd upper_tolerance;
++
++  /** @brief Error function for calculating the error in the position given the source and target positions
++   * this defaults to tesseract_common::calcTransformError if unset*/
++  std::function<Eigen::VectorXd(const Eigen::Isometry3d&, const Eigen::Isometry3d&)> error_function = nullptr;
+ 
+   DynamicCartPoseTermInfo();
+ 
+@@ -325,6 +335,16 @@ struct CartPoseTermInfo : public TermInfo
+   Eigen::Isometry3d source_frame_offset;
+   /** @brief A Static transform to be applied to target_ location */
+   Eigen::Isometry3d target_frame_offset;
++  /** @brief Distance below waypoint that is allowed. Should be size = 6. First 3 elements are dx, dy, dz. The last 3
++   * elements are angle axis error allowed (Eigen::AngleAxisd.axis() * Eigen::AngleAxisd.angle()) */
++  Eigen::VectorXd lower_tolerance;
++  /** @brief Distance above waypoint that is allowed. Should be size = 6. First 3 elements are dx, dy, dz. The last 3
++   * elements are angle axis error allowed (Eigen::AngleAxisd.axis() * Eigen::AngleAxisd.angle())*/
++  Eigen::VectorXd upper_tolerance;
++
++  /** @brief Error function for calculating the error in the position given the source and target positions
++   * this defaults to tesseract_common::calcTransformError if unset*/
++  std::function<Eigen::VectorXd(const Eigen::Isometry3d&, const Eigen::Isometry3d&)> error_function = nullptr;
+ 
+   CartPoseTermInfo();
+ 
+diff --git a/trajopt/src/kinematic_terms.cpp b/trajopt/src/kinematic_terms.cpp
+index d5f97c1..1db8987 100644
+--- a/trajopt/src/kinematic_terms.cpp
++++ b/trajopt/src/kinematic_terms.cpp
+@@ -29,13 +29,98 @@ using Eigen::VectorXd;
+ 
+ namespace trajopt
+ {
++// Function to apply tolerances to error values
++Eigen::VectorXd applyTolerances(const Eigen::VectorXd& error,
++                                const Eigen::VectorXd& lower_tolerance,
++                                const Eigen::VectorXd& upper_tolerance)
++{
++  Eigen::VectorXd resultant(error.size());
++
++  if (error.size() > lower_tolerance.size() || error.size() > upper_tolerance.size())
++  {
++    std::stringstream error_ss;
++    error_ss << "applyTolerances: error vector size greater than tolerance vector size: ";
++    error_ss << lower_tolerance.size() << ", upper: " << upper_tolerance.size() << ", error: " << error.size();
++    throw std::runtime_error(error_ss.str());
++  }
++
++  // Iterate through each element
++  for (int i = 0; i < error.size(); ++i)
++  {
++    // If error is within tolerances, set resultant to 0
++    if (error(i) >= lower_tolerance(i) && error(i) <= upper_tolerance(i))
++    {
++      resultant(i) = 0.0;
++    }
++    // If error is below lower tolerance, set resultant to error - lower_tolerance
++    else if (error(i) < lower_tolerance(i))
++    {
++      resultant(i) = error(i) - lower_tolerance(i);
++    }
++    // If error is above upper tolerance, set resultant to error - upper_tolerance
++    else if (error(i) > upper_tolerance(i))
++    {
++      resultant(i) = error(i) - upper_tolerance(i);
++    }
++  }
++
++  return resultant;
++}
++
++DynamicCartPoseErrCalculator::DynamicCartPoseErrCalculator(tesseract_kinematics::JointGroup::ConstPtr manip,
++                                                           std::string source_frame,
++                                                           std::string target_frame,
++                                                           const Eigen::Isometry3d& source_frame_offset,
++                                                           const Eigen::Isometry3d& target_frame_offset,
++                                                           Eigen::VectorXi indices,
++                                                           Eigen::VectorXd lower_tolerance,
++                                                           Eigen::VectorXd upper_tolerance)
++  : manip_(std::move(manip))
++  , source_frame_(std::move(source_frame))
++  , target_frame_(std::move(target_frame))
++  , source_frame_offset_(source_frame_offset)
++  , target_frame_offset_(target_frame_offset)
++  , indices_(std::move(indices))
++{
++  assert(indices_.size() <= 6);
++
++  if (lower_tolerance.size() != upper_tolerance.size())
++  {
++    std::stringstream error_ss;
++    error_ss << "CartPoseErrCalculator: Mismatched tolerance sizes. lower: " << lower_tolerance.size()
++             << ", upper: " << upper_tolerance.size();
++    throw std::runtime_error(error_ss.str());
++  }
++
++  // Check to see if the waypoint is toleranced and set the error function accordingly
++  if ((lower_tolerance.size() == 0 && upper_tolerance.size() == 0) ||
++      tesseract_common::almostEqualRelativeAndAbs(lower_tolerance, upper_tolerance))
++  {
++    error_function = [this](const Eigen::Isometry3d& source_tf, const Eigen::Isometry3d& target_tf) -> Eigen::VectorXd {
++      return tesseract_common::calcTransformError(source_tf, target_tf);
++    };
++  }
++  else
++  {
++    error_function = [lower_tolerance, upper_tolerance](const Eigen::Isometry3d& source_tf,
++                                                        const Eigen::Isometry3d& target_tf) -> Eigen::VectorXd {
++      // Calculate the error using tesseract_common::calcTransformError or equivalent
++      Eigen::VectorXd err = tesseract_common::calcTransformError(source_tf, target_tf);
++
++      // Apply tolerances
++      return applyTolerances(err, lower_tolerance, upper_tolerance);
++    };
++  }
++}
++
+ VectorXd DynamicCartPoseErrCalculator::operator()(const VectorXd& dof_vals) const
+ {
+   tesseract_common::TransformMap state = manip_->calcFwdKin(dof_vals);
+   Isometry3d source_tf = state[source_frame_] * source_frame_offset_;
+   Isometry3d target_tf = state[target_frame_] * target_frame_offset_;
+ 
+-  VectorXd err = tesseract_common::calcTransformError(target_tf, source_tf);
++  VectorXd err = error_function(target_tf, source_tf);
++
+   VectorXd reduced_err(indices_.size());
+   for (int i = 0; i < indices_.size(); ++i)
+     reduced_err[i] = err[indices_[i]];
+@@ -66,56 +151,80 @@ void DynamicCartPoseErrCalculator::Plot(const tesseract_visualization::Visualiza
+ 
+ MatrixXd DynamicCartPoseJacCalculator::operator()(const VectorXd& dof_vals) const
+ {
+-  auto n_dof = static_cast<int>(manip_->numJoints());
++  // Duplicated from calcForwardNumJac in trajopt_sco/src/num_diff.cpp, but with ignoring tolerances
+   tesseract_common::TransformMap state = manip_->calcFwdKin(dof_vals);
++  Isometry3d source_tf = state[source_frame_] * source_frame_offset_;
++  Isometry3d target_tf = state[target_frame_] * target_frame_offset_;
++  VectorXd err = tesseract_common::calcTransformError(target_tf, source_tf);
+ 
+-  Eigen::Isometry3d source_tf = state[source_frame_] * source_frame_offset_;
+-  Eigen::Isometry3d target_tf = state[target_frame_] * target_frame_offset_;
+-
+-  // Get the jacobian of link in the targets coordinate system
+-  MatrixXd jac_link =
+-      manip_->calcJacobian(dof_vals, manip_->getBaseLinkName(), source_frame_, source_frame_offset_.translation());
+-  tesseract_common::jacobianChangeBase(jac_link, target_tf.inverse());
+-
+-  // Get the jacobian of the target in the targets coordinate system
+-  MatrixXd jac_target =
+-      manip_->calcJacobian(dof_vals, manip_->getBaseLinkName(), target_frame_, target_frame_offset_.translation());
+-  tesseract_common::jacobianChangeBase(jac_target, target_tf.inverse());
+-  tesseract_common::jacobianChangeRefPoint(jac_target, (target_tf.inverse() * source_tf).translation());
+-
+-  MatrixXd jac0 = jac_link - jac_target;
+-
+-  // Paper:
+-  // https://ethz.ch/content/dam/ethz/special-interest/mavt/robotics-n-intelligent-systems/rsl-dam/documents/RobotDynamics2016/RD2016script.pdf
+-  // The jacobian of the robot is the geometric jacobian (Je) which maps generalized velocities in
+-  // joint space to time derivatives of the end-effector configuration representation. It does not
+-  // represent the analytic jacobian (Ja) given by a partial differentiation of position and rotation
+-  // to generalized coordinates. Since the geometric jacobian is unique there exists a linear mapping
+-  // between velocities and the derivatives of the representation.
+-  //
+-  // The approach in the paper was tried but it was having issues with getting correct jacobian.
+-  // Must of had an error in the implementation so should revisit at another time but the approach
+-  // below should be sufficient and faster than numerical calculations using the err function.
+-
+-  // The approach below leverages the geometric jacobian and a small step in time to approximate
+-  // the partial derivative of the error function. Note that the rotational portion is the only part
+-  // that is required to be modified per the paper.
+-  Isometry3d pose_err = target_tf.inverse() * source_tf;
+-  Eigen::Vector3d rot_err = tesseract_common::calcRotationalError(pose_err.rotation());
+-  for (int c = 0; c < jac0.cols(); ++c)
++  Eigen::MatrixXd jac0(err.size(), dof_vals.size());
++  Eigen::VectorXd dof_vals_pert = dof_vals;
++  for (int i = 0; i < dof_vals.size(); ++i)
+   {
+-    auto new_pose_err = trajopt_common::addTwist(pose_err, jac0.col(c), 1e-5);
+-    Eigen::VectorXd new_rot_err = tesseract_common::calcRotationalError(new_pose_err.rotation());
+-    jac0.col(c).tail(3) = ((new_rot_err - rot_err) / 1e-5);
++    dof_vals_pert(i) = dof_vals(i) + epsilon_;
++    tesseract_common::TransformMap state_pert = manip_->calcFwdKin(dof_vals_pert);
++    Isometry3d source_tf_pert = state_pert[source_frame_] * source_frame_offset_;
++    Isometry3d target_tf_pert = state_pert[target_frame_] * target_frame_offset_;
++    VectorXd err_pert = tesseract_common::calcTransformError(target_tf_pert, source_tf_pert);
++    jac0.col(i) = (err_pert - err) / epsilon_;
++    dof_vals_pert(i) = dof_vals(i);
+   }
+ 
+-  MatrixXd reduced_jac(indices_.size(), n_dof);
++  MatrixXd reduced_jac(indices_.size(), manip_->numJoints());
+   for (int i = 0; i < indices_.size(); ++i)
+     reduced_jac.row(i) = jac0.row(indices_[i]);
+ 
+   return reduced_jac;  // This is available in 3.4 jac0(indices_, Eigen::all);
+ }
+ 
++CartPoseErrCalculator::CartPoseErrCalculator(tesseract_kinematics::JointGroup::ConstPtr manip,
++                                             std::string source_frame,
++                                             std::string target_frame,
++                                             const Eigen::Isometry3d& source_frame_offset,
++                                             const Eigen::Isometry3d& target_frame_offset,
++                                             Eigen::VectorXi indices,
++                                             Eigen::VectorXd lower_tolerance,
++                                             Eigen::VectorXd upper_tolerance)
++  : manip_(std::move(manip))
++  , source_frame_(std::move(source_frame))
++  , target_frame_(std::move(target_frame))
++  , source_frame_offset_(source_frame_offset)
++  , target_frame_offset_(target_frame_offset)
++  , indices_(std::move(indices))
++{
++  assert(indices_.size() <= 6);
++  is_target_active_ = manip_->isActiveLinkName(target_frame_);
++
++  if (lower_tolerance.size() != upper_tolerance.size())
++  {
++    std::stringstream error_ss;
++    error_ss << "CartPoseErrCalculator: Mismatched tolerance sizes. lower: " << lower_tolerance.size()
++             << ", upper: " << upper_tolerance.size();
++    throw std::runtime_error(error_ss.str());
++  }
++
++  // Check to see if the waypoint is toleranced and set the error function accordingly
++  if ((lower_tolerance.size() == 0 && upper_tolerance.size() == 0) ||
++      tesseract_common::almostEqualRelativeAndAbs(lower_tolerance, upper_tolerance))
++  {
++    error_function_ = [this](const Eigen::Isometry3d& source_tf,
++                             const Eigen::Isometry3d& target_tf) -> Eigen::VectorXd {
++      return tesseract_common::calcTransformError(source_tf, target_tf);
++    };
++  }
++  else
++  {
++    error_function_ = [lower_tolerance, upper_tolerance](const Eigen::Isometry3d& source_tf,
++                                                         const Eigen::Isometry3d& target_tf) -> Eigen::VectorXd {
++      // Calculate the error using tesseract_common::calcTransformError or equivalent
++      Eigen::VectorXd err = tesseract_common::calcTransformError(source_tf, target_tf);
++
++      // Apply tolerances
++      return applyTolerances(err, lower_tolerance, upper_tolerance);
++    };
++  }
++}
++
+ VectorXd CartPoseErrCalculator::operator()(const VectorXd& dof_vals) const
+ {
+   tesseract_common::TransformMap state = manip_->calcFwdKin(dof_vals);
+@@ -124,9 +233,9 @@ VectorXd CartPoseErrCalculator::operator()(const VectorXd& dof_vals) const
+ 
+   VectorXd err;
+   if (is_target_active_)
+-    err = tesseract_common::calcTransformError(source_tf, target_tf);
++    err = error_function_(source_tf, target_tf);
+   else
+-    err = tesseract_common::calcTransformError(target_tf, source_tf);
++    err = error_function_(target_tf, source_tf);
+ 
+   VectorXd reduced_err(indices_.size());
+   for (int i = 0; i < indices_.size(); ++i)
+@@ -157,48 +266,33 @@ void CartPoseErrCalculator::Plot(const tesseract_visualization::Visualization::P
+ 
+ MatrixXd CartPoseJacCalculator::operator()(const VectorXd& dof_vals) const
+ {
+-  tesseract_common::TransformMap state = manip_->calcFwdKin(dof_vals);
+-  Eigen::Isometry3d pose_inv{ Eigen::Isometry3d::Identity() };
+-  Eigen::Isometry3d tf0{ Eigen::Isometry3d::Identity() };
+-  Eigen::MatrixXd jac0;
+-
+-  if (is_target_active_)
+-  {
+-    pose_inv = (state[source_frame_] * source_frame_offset_).inverse();
+-    tf0 = state[target_frame_] * target_frame_offset_;
+-    jac0 = manip_->calcJacobian(dof_vals, manip_->getBaseLinkName(), target_frame_, target_frame_offset_.translation());
+-    tesseract_common::jacobianChangeBase(jac0, pose_inv);
+-  }
+-  else
+-  {
+-    pose_inv = (state[target_frame_] * target_frame_offset_).inverse();
+-    tf0 = state[source_frame_] * source_frame_offset_;
+-    jac0 = manip_->calcJacobian(dof_vals, manip_->getBaseLinkName(), source_frame_, source_frame_offset_.translation());
+-    tesseract_common::jacobianChangeBase(jac0, pose_inv);
+-  }
+-
+-  // Paper:
+-  // https://ethz.ch/content/dam/ethz/special-interest/mavt/robotics-n-intelligent-systems/rsl-dam/documents/RobotDynamics2016/RD2016script.pdf
+-  // The jacobian of the robot is the geometric jacobian (Je) which maps generalized velocities in
+-  // joint space to time derivatives of the end-effector configuration representation. It does not
+-  // represent the analytic jacobian (Ja) given by a partial differentiation of position and rotation
+-  // to generalized coordinates. Since the geometric jacobian is unique there exists a linear mapping
+-  // between velocities and the derivatives of the representation.
+-  //
+-  // The approach in the paper was tried but it was having issues with getting correct jacobian.
+-  // Must of had an error in the implementation so should revisit at another time but the approach
+-  // below should be sufficient and faster than numerical calculations using the err function.
+-
+-  // The approach below leverages the geometric jacobian and a small step in time to approximate
+-  // the partial derivative of the error function. Note that the rotational portion is the only part
+-  // that is required to be modified per the paper.
+-  Isometry3d pose_err = pose_inv * tf0;
+-  Eigen::Vector3d rot_err = tesseract_common::calcRotationalError(pose_err.rotation());
+-  for (int c = 0; c < jac0.cols(); ++c)
++  // Duplicated from calcForwardNumJac in trajopt_sco/src/num_diff.cpp, but with ignoring tolerances
++  auto calc_error = [this](const VectorXd& vals) -> VectorXd {
++    tesseract_common::TransformMap state = manip_->calcFwdKin(vals);
++    Isometry3d source_tf = state[source_frame_] * source_frame_offset_;
++    Isometry3d target_tf = state[target_frame_] * target_frame_offset_;
++    VectorXd err;
++    if (is_target_active_)
++      err = tesseract_common::calcTransformErrorJac(source_tf, target_tf);
++    else
++      err = tesseract_common::calcTransformErrorJac(target_tf, source_tf);
++
++    VectorXd reduced_err(indices_.size());
++    for (int i = 0; i < indices_.size(); ++i)
++      reduced_err[i] = err[indices_[i]];
++
++    return reduced_err;
++  };
++
++  VectorXd err = calc_error(dof_vals);
++  Eigen::MatrixXd jac0(err.size(), dof_vals.size());
++  Eigen::VectorXd dof_vals_pert = dof_vals;
++  for (int i = 0; i < dof_vals.size(); ++i)
+   {
+-    auto new_pose_err = trajopt_common::addTwist(pose_err, jac0.col(c), 1e-5);
+-    Eigen::VectorXd new_rot_err = tesseract_common::calcRotationalError(new_pose_err.rotation());
+-    jac0.col(c).tail(3) = ((new_rot_err - rot_err) / 1e-5);
++    dof_vals_pert(i) = dof_vals(i) + epsilon_;
++    VectorXd err_pert = calc_error(dof_vals_pert);
++    jac0.col(i) = (err_pert - err) / epsilon_;
++    dof_vals_pert(i) = dof_vals(i);
+   }
+ 
+   MatrixXd reduced_jac(indices_.size(), manip_->numJoints());
+diff --git a/trajopt/src/problem_description.cpp b/trajopt/src/problem_description.cpp
+index 959edff..f418779 100644
+--- a/trajopt/src/problem_description.cpp
++++ b/trajopt/src/problem_description.cpp
+@@ -777,10 +777,15 @@ void DynamicCartPoseTermInfo::hatch(TrajOptProb& prob)
+   }
+   else
+   {
+-    auto f = std::make_shared<DynamicCartPoseErrCalculator>(
+-        prob.GetKin(), source_frame, target_frame, source_frame_offset, target_frame_offset, indices);
++    auto f = std::make_shared<DynamicCartPoseErrCalculator>(prob.GetKin(),
++                                                            source_frame,
++                                                            target_frame,
++                                                            source_frame_offset,
++                                                            target_frame_offset,
++                                                            indices,
++                                                            lower_tolerance,
++                                                            upper_tolerance);
+ 
+-    // This is currently not being used. There is an intermittent bug that needs to be tracked down it is not used.
+     auto dfdx = std::make_shared<DynamicCartPoseJacCalculator>(
+         prob.GetKin(), source_frame, target_frame, source_frame_offset, target_frame_offset, indices);
+ 
+@@ -788,12 +793,12 @@ void DynamicCartPoseTermInfo::hatch(TrajOptProb& prob)
+     if (term_type & TT_COST)
+     {
+       prob.addCost(
+-          std::make_shared<TrajOptCostFromErrFunc>(f, prob.GetVarRow(timestep, 0, n_dof), coeff, sco::ABS, name));
++          std::make_shared<TrajOptCostFromErrFunc>(f, dfdx, prob.GetVarRow(timestep, 0, n_dof), coeff, sco::ABS, name));
+     }
+     else if (term_type & TT_CNT)
+     {
+-      prob.addConstraint(
+-          std::make_shared<TrajOptConstraintFromErrFunc>(f, prob.GetVarRow(timestep, 0, n_dof), coeff, sco::EQ, name));
++      prob.addConstraint(std::make_shared<TrajOptConstraintFromErrFunc>(
++          f, dfdx, prob.GetVarRow(timestep, 0, n_dof), coeff, sco::EQ, name));
+     }
+     else
+     {
+@@ -920,25 +925,35 @@ void CartPoseTermInfo::hatch(TrajOptProb& prob)
+   }
+   else if ((term_type & TT_COST) && ~(term_type | ~TT_USE_TIME))
+   {
+-    auto f = std::make_shared<CartPoseErrCalculator>(
+-        prob.GetKin(), source_frame, target_frame, source_frame_offset, target_frame_offset, indices);
++    auto f = std::make_shared<CartPoseErrCalculator>(prob.GetKin(),
++                                                     source_frame,
++                                                     target_frame,
++                                                     source_frame_offset,
++                                                     target_frame_offset,
++                                                     indices,
++                                                     lower_tolerance,
++                                                     upper_tolerance);
+ 
+-    // This is currently not being used. There is an intermittent bug that needs to be tracked down it is not used.
+     auto dfdx = std::make_shared<CartPoseJacCalculator>(
+         prob.GetKin(), source_frame, target_frame, source_frame_offset, target_frame_offset, indices);
+     prob.addCost(
+-        std::make_shared<TrajOptCostFromErrFunc>(f, prob.GetVarRow(timestep, 0, n_dof), coeff, sco::ABS, name));
++        std::make_shared<TrajOptCostFromErrFunc>(f, dfdx, prob.GetVarRow(timestep, 0, n_dof), coeff, sco::ABS, name));
+   }
+   else if ((term_type & TT_CNT) && ~(term_type | ~TT_USE_TIME))
+   {
+-    auto f = std::make_shared<CartPoseErrCalculator>(
+-        prob.GetKin(), source_frame, target_frame, source_frame_offset, target_frame_offset, indices);
++    auto f = std::make_shared<CartPoseErrCalculator>(prob.GetKin(),
++                                                     source_frame,
++                                                     target_frame,
++                                                     source_frame_offset,
++                                                     target_frame_offset,
++                                                     indices,
++                                                     lower_tolerance,
++                                                     upper_tolerance);
+ 
+-    // This is currently not being used. There is an intermittent bug that needs to be tracked down it is not used.
+     auto dfdx = std::make_shared<CartPoseJacCalculator>(
+         prob.GetKin(), source_frame, target_frame, source_frame_offset, target_frame_offset, indices);
+-    prob.addConstraint(
+-        std::make_shared<TrajOptConstraintFromErrFunc>(f, prob.GetVarRow(timestep, 0, n_dof), coeff, sco::EQ, name));
++    prob.addConstraint(std::make_shared<TrajOptConstraintFromErrFunc>(
++        f, dfdx, prob.GetVarRow(timestep, 0, n_dof), coeff, sco::EQ, name));
+   }
+   else
+   {
+diff --git a/trajopt/test/benchmarks/CMakeLists.txt b/trajopt/test/benchmarks/CMakeLists.txt
+index cdd50d3..1d2948b 100644
+--- a/trajopt/test/benchmarks/CMakeLists.txt
++++ b/trajopt/test/benchmarks/CMakeLists.txt
+@@ -10,7 +10,7 @@ macro(add_benchmark benchmark_name benchmark_file)
+   target_link_libraries(
+     ${benchmark_name}
+     ${PROJECT_NAME}
+-    osqp::osqpstatic
++    osqp::osqp
+     benchmark::benchmark)
+   target_include_directories(${benchmark_name} PRIVATE "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>")
+   add_dependencies(${benchmark_name} ${PROJECT_NAME})
+diff --git a/trajopt/test/kinematic_costs_unit.cpp b/trajopt/test/kinematic_costs_unit.cpp
+index 3ea6a99..a448607 100644
+--- a/trajopt/test/kinematic_costs_unit.cpp
++++ b/trajopt/test/kinematic_costs_unit.cpp
+@@ -79,7 +79,8 @@ TEST_F(KinematicCostsTest, CartPoseJacCalculator)  // NOLINT
+   std::string source_frame = env_->getRootLinkName();
+   std::string target_frame = "r_gripper_tool_frame";
+   Eigen::Isometry3d source_frame_offset = env_->getState().link_transforms.at(target_frame);
+-  Eigen::Isometry3d target_frame_offset = Eigen::Isometry3d::Identity();
++  Eigen::Isometry3d target_frame_offset =
++      Eigen::Isometry3d::Identity() * Eigen::AngleAxisd(M_PI, Eigen::Vector3d::UnitZ());
+ 
+   Eigen::VectorXd values(7);
+   values << -1.1, 1.2, -3.3, -1.4, 5.5, -1.6, 7.7;
+diff --git a/trajopt_common/include/trajopt_common/collision_utils.h b/trajopt_common/include/trajopt_common/collision_utils.h
+index 9af2030..76ab042 100644
+--- a/trajopt_common/include/trajopt_common/collision_utils.h
++++ b/trajopt_common/include/trajopt_common/collision_utils.h
+@@ -47,9 +47,11 @@ std::size_t cantorHash(int shape_id, int subshape_id);
+  * @brief Remove any results that are invalid.
+  * Invalid state are contacts that occur at fixed states or have distances outside the threshold.
+  * @param contact_results Contact results vector to process.
++ * @param position_vars_fixed Indicate if a state is fixed
+  */
+ void removeInvalidContactResults(tesseract_collision::ContactResultVector& contact_results,
+-                                 const Eigen::Vector3d& data);
++                                 const Eigen::Vector3d& data,
++                                 const std::array<bool, 2>& position_vars_fixed);
+ 
+ /**
+  * @brief Extracts the gradient information based on the contact results
+diff --git a/trajopt_common/src/collision_utils.cpp b/trajopt_common/src/collision_utils.cpp
+index c4c7265..f99886f 100644
+--- a/trajopt_common/src/collision_utils.cpp
++++ b/trajopt_common/src/collision_utils.cpp
+@@ -67,13 +67,44 @@ std::size_t cantorHash(int shape_id, int subshape_id)
+   return static_cast<std::size_t>(1 / 2.0 * (shape_id + subshape_id) * (shape_id + subshape_id + 1) + subshape_id);
+ }
+ 
+-void removeInvalidContactResults(tesseract_collision::ContactResultVector& contact_results, const Eigen::Vector3d& data)
++void removeInvalidContactResults(tesseract_collision::ContactResultVector& contact_results,
++                                 const Eigen::Vector3d& data,
++                                 const std::array<bool, 2>& position_vars_fixed)
+ {
+-  auto end = std::remove_if(
+-      contact_results.begin(), contact_results.end(), [=, &data](const tesseract_collision::ContactResult& r) {
+-        /** @todo Is this correct? (Levi)*/
+-        return (!((data[0] + data[1]) > r.distance));
+-      });
++  auto end = std::remove_if(contact_results.begin(),
++                            contact_results.end(),
++                            [=, &data, &position_vars_fixed](const tesseract_collision::ContactResult& r) {
++                              /** @todo Is this correct? (Levi)*/
++                              if ((!((data[0] + data[1]) > r.distance)))
++                                return true;
++
++                              if (!position_vars_fixed[0] && !position_vars_fixed[1])
++                                return false;
++
++                              if (position_vars_fixed[0])
++                              {
++                                if (r.cc_type[0] != tesseract_collision::ContinuousCollisionType::CCType_None &&
++                                    r.cc_type[0] != tesseract_collision::ContinuousCollisionType::CCType_Time0)
++                                  return false;
++
++                                if (r.cc_type[1] != tesseract_collision::ContinuousCollisionType::CCType_None &&
++                                    r.cc_type[1] != tesseract_collision::ContinuousCollisionType::CCType_Time0)
++                                  return false;
++                              }
++
++                              if (position_vars_fixed[1])
++                              {
++                                if (r.cc_type[0] != tesseract_collision::ContinuousCollisionType::CCType_None &&
++                                    r.cc_type[0] != tesseract_collision::ContinuousCollisionType::CCType_Time1)
++                                  return false;
++
++                                if (r.cc_type[1] != tesseract_collision::ContinuousCollisionType::CCType_None &&
++                                    r.cc_type[1] != tesseract_collision::ContinuousCollisionType::CCType_Time1)
++                                  return false;
++                              }
++
++                              return true;
++                            });
+ 
+   contact_results.erase(end, contact_results.end());
+ }
+diff --git a/trajopt_ifopt/include/trajopt_ifopt/constraints/collision/continuous_collision_evaluators.h b/trajopt_ifopt/include/trajopt_ifopt/constraints/collision/continuous_collision_evaluators.h
+index 31f5aa6..9bb50c0 100644
+--- a/trajopt_ifopt/include/trajopt_ifopt/constraints/collision/continuous_collision_evaluators.h
++++ b/trajopt_ifopt/include/trajopt_ifopt/constraints/collision/continuous_collision_evaluators.h
+@@ -139,9 +139,10 @@ private:
+   CalcCollisionsCacheDataHelper(const Eigen::Ref<const Eigen::VectorXd>& dof_vals0,
+                                 const Eigen::Ref<const Eigen::VectorXd>& dof_vals1);
+ 
+-  void CalcCollisionsHelper(const Eigen::Ref<const Eigen::VectorXd>& dof_vals0,
++  void CalcCollisionsHelper(tesseract_collision::ContactResultMap& dist_results,
++                            const Eigen::Ref<const Eigen::VectorXd>& dof_vals0,
+                             const Eigen::Ref<const Eigen::VectorXd>& dof_vals1,
+-                            tesseract_collision::ContactResultMap& dist_results);
++                            const std::array<bool, 2>& position_vars_fixed);
+ };
+ 
+ /**
+@@ -190,9 +191,10 @@ private:
+   CalcCollisionsCacheDataHelper(const Eigen::Ref<const Eigen::VectorXd>& dof_vals0,
+                                 const Eigen::Ref<const Eigen::VectorXd>& dof_vals1);
+ 
+-  void CalcCollisionsHelper(const Eigen::Ref<const Eigen::VectorXd>& dof_vals0,
++  void CalcCollisionsHelper(tesseract_collision::ContactResultMap& dist_results,
++                            const Eigen::Ref<const Eigen::VectorXd>& dof_vals0,
+                             const Eigen::Ref<const Eigen::VectorXd>& dof_vals1,
+-                            tesseract_collision::ContactResultMap& dist_results);
++                            const std::array<bool, 2>& position_vars_fixed);
+ };
+ }  // namespace trajopt_ifopt
+ #endif  // TRAJOPT_IFOPT_CONTINUOUS_COLLISION_EVALUATOR_H
+diff --git a/trajopt_ifopt/src/constraints/collision/continuous_collision_evaluators.cpp b/trajopt_ifopt/src/constraints/collision/continuous_collision_evaluators.cpp
+index 5dbda07..188ffd8 100644
+--- a/trajopt_ifopt/src/constraints/collision/continuous_collision_evaluators.cpp
++++ b/trajopt_ifopt/src/constraints/collision/continuous_collision_evaluators.cpp
+@@ -92,7 +92,7 @@ LVSContinuousCollisionEvaluator::CalcCollisionData(const Eigen::Ref<const Eigen:
+   }
+ 
+   auto data = std::make_shared<trajopt_common::CollisionCacheData>();
+-  CalcCollisionsHelper(dof_vals0, dof_vals1, data->contact_results_map);
++  CalcCollisionsHelper(data->contact_results_map, dof_vals0, dof_vals1, position_vars_fixed);
+ 
+   for (const auto& pair : data->contact_results_map)
+   {
+@@ -165,9 +165,10 @@ LVSContinuousCollisionEvaluator::CalcCollisionData(const Eigen::Ref<const Eigen:
+   return data;
+ }
+ 
+-void LVSContinuousCollisionEvaluator::CalcCollisionsHelper(const Eigen::Ref<const Eigen::VectorXd>& dof_vals0,
++void LVSContinuousCollisionEvaluator::CalcCollisionsHelper(tesseract_collision::ContactResultMap& dist_results,
++                                                           const Eigen::Ref<const Eigen::VectorXd>& dof_vals0,
+                                                            const Eigen::Ref<const Eigen::VectorXd>& dof_vals1,
+-                                                           tesseract_collision::ContactResultMap& dist_results)
++                                                           const std::array<bool, 2>& position_vars_fixed)
+ {
+   // The first step is to see if the distance between two states is larger than the longest valid segment. If larger
+   // the collision checking is broken up into multiple casted collision checks such that each check is less then
+@@ -186,7 +187,7 @@ void LVSContinuousCollisionEvaluator::CalcCollisionsHelper(const Eigen::Ref<cons
+   // Don't include contacts at the fixed state
+   // Don't include contacts with zero coeffs
+   const auto& zero_coeff_pairs = collision_config_->collision_coeff_data.getPairsWithZeroCoeff();
+-  auto filter = [this, &zero_coeff_pairs](tesseract_collision::ContactResultMap::PairType& pair) {
++  auto filter = [this, &zero_coeff_pairs, &position_vars_fixed](tesseract_collision::ContactResultMap::PairType& pair) {
+     // Remove pairs with zero coeffs
+     if (std::find(zero_coeff_pairs.begin(), zero_coeff_pairs.end(), pair.first) != zero_coeff_pairs.end())
+     {
+@@ -199,7 +200,7 @@ void LVSContinuousCollisionEvaluator::CalcCollisionsHelper(const Eigen::Ref<cons
+                                                                                                pair.first.second);
+     double coeff = collision_config_->collision_coeff_data.getPairCollisionCoeff(pair.first.first, pair.first.second);
+     const Eigen::Vector3d data = { dist, collision_config_->collision_margin_buffer, coeff };
+-    trajopt_common::removeInvalidContactResults(pair.second, data); /** @todo Should this be removed? levi */
++    trajopt_common::removeInvalidContactResults(pair.second, data, position_vars_fixed);
+   };
+ 
+   if (collision_config_->type == tesseract_collision::CollisionEvaluatorType::LVS_CONTINUOUS &&
+@@ -329,7 +330,7 @@ LVSDiscreteCollisionEvaluator::CalcCollisionData(const Eigen::Ref<const Eigen::V
+   }
+ 
+   auto data = std::make_shared<trajopt_common::CollisionCacheData>();
+-  CalcCollisionsHelper(dof_vals0, dof_vals1, data->contact_results_map);
++  CalcCollisionsHelper(data->contact_results_map, dof_vals0, dof_vals1, position_vars_fixed);
+   for (const auto& pair : data->contact_results_map)
+   {
+     using ShapeGrsType = std::map<std::pair<std::size_t, std::size_t>, trajopt_common::GradientResultsSet>;
+@@ -401,9 +402,10 @@ LVSDiscreteCollisionEvaluator::CalcCollisionData(const Eigen::Ref<const Eigen::V
+   return data;
+ }
+ 
+-void LVSDiscreteCollisionEvaluator::CalcCollisionsHelper(const Eigen::Ref<const Eigen::VectorXd>& dof_vals0,
++void LVSDiscreteCollisionEvaluator::CalcCollisionsHelper(tesseract_collision::ContactResultMap& dist_results,
++                                                         const Eigen::Ref<const Eigen::VectorXd>& dof_vals0,
+                                                          const Eigen::Ref<const Eigen::VectorXd>& dof_vals1,
+-                                                         tesseract_collision::ContactResultMap& dist_results)
++                                                         const std::array<bool, 2>& position_vars_fixed)
+ {
+   // If not empty then there are links that are not part of the kinematics object that can move (dynamic environment)
+   if (!diff_active_link_names_.empty())
+@@ -417,7 +419,7 @@ void LVSDiscreteCollisionEvaluator::CalcCollisionsHelper(const Eigen::Ref<const
+   // Don't include contacts at the fixed state
+   // Don't include contacts with zero coeffs
+   const auto& zero_coeff_pairs = collision_config_->collision_coeff_data.getPairsWithZeroCoeff();
+-  auto filter = [this, &zero_coeff_pairs](tesseract_collision::ContactResultMap::PairType& pair) {
++  auto filter = [this, &zero_coeff_pairs, &position_vars_fixed](tesseract_collision::ContactResultMap::PairType& pair) {
+     // Remove pairs with zero coeffs
+     if (std::find(zero_coeff_pairs.begin(), zero_coeff_pairs.end(), pair.first) != zero_coeff_pairs.end())
+     {
+@@ -432,7 +434,7 @@ void LVSDiscreteCollisionEvaluator::CalcCollisionsHelper(const Eigen::Ref<const
+     const Eigen::Vector3d data = { dist, collision_config_->collision_margin_buffer, coeff };
+ 
+     // Don't include contacts at the fixed state
+-    trajopt_common::removeInvalidContactResults(pair.second, data);
++    trajopt_common::removeInvalidContactResults(pair.second, data, position_vars_fixed);
+   };
+ 
+   // The first step is to see if the distance between two states is larger than the longest valid segment. If larger
+diff --git a/trajopt_optimizers/trajopt_sqp/include/trajopt_sqp/qp_problem.h b/trajopt_optimizers/trajopt_sqp/include/trajopt_sqp/qp_problem.h
+index ca56726..ae964a8 100644
+--- a/trajopt_optimizers/trajopt_sqp/include/trajopt_sqp/qp_problem.h
++++ b/trajopt_optimizers/trajopt_sqp/include/trajopt_sqp/qp_problem.h
+@@ -56,7 +56,7 @@ public:
+   /** @brief Set the current Optimization variables */
+   virtual void setVariables(const double* x) = 0;
+ 
+-  /** @brief Set the current Optimization variable values */
++  /** @brief Get the current Optimization variable values */
+   virtual Eigen::VectorXd getVariableValues() const = 0;
+ 
+   /** @brief Run the full convexification routine */
+diff --git a/trajopt_optimizers/trajopt_sqp/include/trajopt_sqp/types.h b/trajopt_optimizers/trajopt_sqp/include/trajopt_sqp/types.h
+index b77c680..071fd18 100644
+--- a/trajopt_optimizers/trajopt_sqp/include/trajopt_sqp/types.h
++++ b/trajopt_optimizers/trajopt_sqp/include/trajopt_sqp/types.h
+@@ -72,6 +72,8 @@ struct SQPParameters
+   double cnt_tolerance = 1e-4;
+   /** @brief Max number of times the constraints will be inflated */
+   double max_merit_coeff_increases = 5;
++  /** @brief Max number of times the QP solver can fail before optimization is aborted */
++  int max_qp_solver_failures = 3;
+   /** @brief Constraints are scaled by this amount when inflated */
+   double merit_coeff_increase_ratio = 10;
+   /** @brief Max time in seconds that the optimizer will run */
+@@ -215,7 +217,7 @@ enum class SQPStatus
+   NLP_CONVERGED,           /**< NLP Successfully converged */
+   ITERATION_LIMIT,         /**< SQP Optimization reached iteration limit */
+   PENALTY_ITERATION_LIMIT, /**< SQP Optimization reached penalty iteration limit */
+-  TIME_LIMIT,              /**< SQP Optimization reached reached limit */
++  OPT_TIME_LIMIT,          /**< SQP Optimization reached reached limit */
+   QP_SOLVER_ERROR,         /**< QP Solver failed */
+   CALLBACK_STOPPED         /**< Optimization stopped because callback returned false */
+ };
+diff --git a/trajopt_optimizers/trajopt_sqp/src/osqp_eigen_solver.cpp b/trajopt_optimizers/trajopt_sqp/src/osqp_eigen_solver.cpp
+index bc08e5a..d570926 100644
+--- a/trajopt_optimizers/trajopt_sqp/src/osqp_eigen_solver.cpp
++++ b/trajopt_optimizers/trajopt_sqp/src/osqp_eigen_solver.cpp
+@@ -312,7 +312,7 @@ bool OSQPEigenSolver::updateLinearConstraintsMatrix(const SparseMatrix& linearCo
+     bool success = solver_.updateLinearConstraintsMatrix(cleaned);
+     if (cleaned.nonZeros() == 0) /** @todo Remove when upgrading to OSQP 1.0.0 */
+     {
+-      csc_spfree(solver_.data()->getData()->A);
++      csc_spfree_fix(solver_.data()->getData()->A);
+       solver_.data()->getData()->A = nullptr;
+       solver_.data()->getData()->A = csc_spalloc_fix(cleaned.rows(), cleaned.cols(), 0, 1, 0);
+     }
+@@ -322,7 +322,7 @@ bool OSQPEigenSolver::updateLinearConstraintsMatrix(const SparseMatrix& linearCo
+   bool success = solver_.data()->setLinearConstraintsMatrix(cleaned);
+   if (cleaned.nonZeros() == 0) /** @todo Remove when upgrading to OSQP 1.0.0 */
+   {
+-    csc_spfree(solver_.data()->getData()->A);
++    csc_spfree_fix(solver_.data()->getData()->A);
+     solver_.data()->getData()->A = nullptr;
+     solver_.data()->getData()->A = csc_spalloc_fix(cleaned.rows(), cleaned.cols(), 0, 1, 0);
+   }
+diff --git a/trajopt_optimizers/trajopt_sqp/src/trust_region_sqp_solver.cpp b/trajopt_optimizers/trajopt_sqp/src/trust_region_sqp_solver.cpp
+index cd12dcd..34ea048 100644
+--- a/trajopt_optimizers/trajopt_sqp/src/trust_region_sqp_solver.cpp
++++ b/trajopt_optimizers/trajopt_sqp/src/trust_region_sqp_solver.cpp
+@@ -98,13 +98,13 @@ void TrustRegionSQPSolver::solve(const QPProblem::Ptr& qp_problem)
+     results_.convexify_iteration = 0;
+ 
+     // Convexification loop
+-    for (int convex_iteration = 0; convex_iteration < 100; convex_iteration++)
++    for (int convex_iteration = 1; convex_iteration < 100; convex_iteration++)
+     {
+       double elapsed_time = std::chrono::duration<double, std::milli>(Clock::now() - start_time).count() / 1000.0;
+       if (elapsed_time > params.max_time)
+       {
+         CONSOLE_BRIDGE_logInform("Elapsed time %f has exceeded max time %f", elapsed_time, params.max_time);
+-        status_ = SQPStatus::TIME_LIMIT;
++        status_ = SQPStatus::OPT_TIME_LIMIT;
+         break;
+       }
+ 
+@@ -127,7 +127,7 @@ void TrustRegionSQPSolver::solve(const QPProblem::Ptr& qp_problem)
+     }
+ 
+     // If status is iteration limit or time limit we need to exit penalty iteration loop
+-    if (status_ == SQPStatus::ITERATION_LIMIT || status_ == SQPStatus::TIME_LIMIT)
++    if (status_ == SQPStatus::ITERATION_LIMIT || status_ == SQPStatus::OPT_TIME_LIMIT)
+       break;
+ 
+     // Set status to running
+@@ -230,6 +230,7 @@ bool TrustRegionSQPSolver::stepSQPSolver()
+ void TrustRegionSQPSolver::runTrustRegionLoop()
+ {
+   results_.trust_region_iteration = 0;
++  int qp_solver_failures = 0;
+   while (results_.box_size.maxCoeff() >= params.min_trust_box_size)
+   {
+     if (SUPER_DEBUG_MODE)
+@@ -240,12 +241,34 @@ void TrustRegionSQPSolver::runTrustRegionLoop()
+ 
+     // Solve the current QP problem
+     status_ = solveQPProblem();
++
+     if (status_ != SQPStatus::RUNNING)
+     {
+-      qp_problem->setVariables(results_.best_var_vals.data());
+-      qp_problem->scaleBoxSize(params.trust_shrink_ratio);
+-      qp_solver->updateBounds(qp_problem->getBoundsLower(), qp_problem->getBoundsUpper());
+-      results_.box_size = qp_problem->getBoxSize();
++      qp_solver_failures++;
++      CONSOLE_BRIDGE_logWarn("Convex solver failed (%d/%d)!", qp_solver_failures, params.max_qp_solver_failures);
++
++      if (qp_solver_failures < params.max_qp_solver_failures)
++      {
++        qp_problem->scaleBoxSize(params.trust_shrink_ratio);
++        qp_solver->updateBounds(qp_problem->getBoundsLower(), qp_problem->getBoundsUpper());
++        results_.box_size = qp_problem->getBoxSize();
++
++        CONSOLE_BRIDGE_logInform("Shrunk trust region. New box size: %.4f", results_.box_size[0]);
++        continue;
++      }
++
++      if (qp_solver_failures == params.max_qp_solver_failures)
++      {
++        // Convex solver failed and this is the last attempt so setting the trust region to the minimum
++        qp_problem->setBoxSize(Eigen::VectorXd::Constant(qp_problem->getNumNLPVars(), params.min_trust_box_size));
++        qp_solver->updateBounds(qp_problem->getBoundsLower(), qp_problem->getBoundsUpper());
++        results_.box_size = qp_problem->getBoxSize();
++
++        CONSOLE_BRIDGE_logInform("Shrunk trust region to minimum. New box size: %.4f", results_.box_size[0]);
++        continue;
++      }
++
++      CONSOLE_BRIDGE_logError("The convex solver failed you one too many times.");
+       return;
+     }
+ 
+@@ -303,6 +326,7 @@ void TrustRegionSQPSolver::runTrustRegionLoop()
+       qp_problem->setVariables(results_.best_var_vals.data());
+ 
+       qp_problem->scaleBoxSize(params.trust_expand_ratio);
++      qp_solver->updateBounds(qp_problem->getBoundsLower(), qp_problem->getBoundsUpper());
+       results_.box_size = qp_problem->getBoxSize();
+       CONSOLE_BRIDGE_logInform("Expanded trust region. new box size: %.4f", results_.box_size[0]);
+       return;
+@@ -359,6 +383,8 @@ SQPStatus TrustRegionSQPSolver::solveQPProblem()
+   }
+   else
+   {
++    qp_problem->setVariables(results_.best_var_vals.data());
++
+     CONSOLE_BRIDGE_logError("Solver Failure");
+     return SQPStatus::QP_SOLVER_ERROR;
+   }
+@@ -385,7 +411,8 @@ void TrustRegionSQPSolver::printStepInfo() const
+   // Print Header
+   std::printf("\n| %s |\n", std::string(88, '=').c_str());
+   std::printf("| %s %s %s |\n", std::string(36, ' ').c_str(), "ROS Industrial", std::string(36, ' ').c_str());
+-  std::printf("| %s %s %s |\n", std::string(32, ' ').c_str(), "TrajOpt Motion Planning", std::string(31, ' ').c_str());
++  std::printf(
++      "| %s %s %s |\n", std::string(28, ' ').c_str(), "TrajOpt Ifopt Motion Planning", std::string(29, ' ').c_str());
+   std::printf("| %s |\n", std::string(88, '=').c_str());
+   std::printf("| %s %s (Box Size: %-3.9f) %s |\n",
+               std::string(26, ' ').c_str(),
+diff --git a/trajopt_sco/CMakeLists.txt b/trajopt_sco/CMakeLists.txt
+index 79ccdd1..c8a257c 100644
+--- a/trajopt_sco/CMakeLists.txt
++++ b/trajopt_sco/CMakeLists.txt
+@@ -99,7 +99,7 @@ if(HAVE_BPMPD)
+                                                      HAVE_BPMPD=ON)
+ endif()
+ if(osqp_FOUND)
+-  target_link_libraries(${PROJECT_NAME} PRIVATE osqp::osqpstatic)
++  target_link_libraries(${PROJECT_NAME} PRIVATE osqp::osqp)
+   target_compile_definitions(${PROJECT_NAME} PRIVATE HAVE_OSQP=ON)
+ endif()
+ if(qpOASES_FOUND AND TRAJOPT_BUILD_qpOASES)
+diff --git a/trajopt_sco/include/trajopt_sco/optimizers.hpp b/trajopt_sco/include/trajopt_sco/optimizers.hpp
+index e6b8d31..0642a26 100644
+--- a/trajopt_sco/include/trajopt_sco/optimizers.hpp
++++ b/trajopt_sco/include/trajopt_sco/optimizers.hpp
+@@ -23,11 +23,9 @@ enum OptStatus
+   OPT_FAILED,
+   INVALID
+ };
+-static const std::array<std::string, 5> OptStatus_strings = { "CONVERGED",
+-                                                              "SCO_ITERATION_LIMIT",
+-                                                              "PENALTY_ITERATION_LIMIT",
+-                                                              "FAILED",
+-                                                              "INVALID" };
++static const std::array<std::string, 6> OptStatus_strings = {
++  "OPT_CONVERGED", "OPT_SCO_ITERATION_LIMIT", "OPT_PENALTY_ITERATION_LIMIT", "OPT_TIME_LIMIT", "OPT_FAILED", "INVALID"
++};
+ inline std::string statusToString(OptStatus status) { return OptStatus_strings[status]; }
+ struct OptResults
+ {
+diff --git a/trajopt_sco/src/bpmpd_interface.cpp b/trajopt_sco/src/bpmpd_interface.cpp
+index ab48e7f..c641307 100644
+--- a/trajopt_sco/src/bpmpd_interface.cpp
++++ b/trajopt_sco/src/bpmpd_interface.cpp
+@@ -1,6 +1,8 @@
+ #include <trajopt_common/macros.h>
+ TRAJOPT_IGNORE_WARNINGS_PUSH
+ #include <cmath>
++#include <fstream>
++#include <csignal>
+ #include <array>
+ #include <mutex>
+ #include <trajopt_sco/bpmpd_io.hpp>
+diff --git a/trajopt_sco/src/optimizers.cpp b/trajopt_sco/src/optimizers.cpp
+index e22f785..a47d363 100644
+--- a/trajopt_sco/src/optimizers.cpp
++++ b/trajopt_sco/src/optimizers.cpp
+@@ -360,99 +360,106 @@ void BasicTrustRegionSQPResults::update(const OptResults& prev_opt_results,
+ void BasicTrustRegionSQPResults::print() const
+ {
+   // Print Header
+-  std::printf("\n| %s |\n", std::string(75, '=').c_str());
+-  std::printf("| %s %s %s |\n", std::string(29, ' ').c_str(), "ROS Industrial", std::string(30, ' ').c_str());
+-  std::printf("| %s %s %s |\n", std::string(25, ' ').c_str(), "TrajOpt Motion Planning", std::string(25, ' ').c_str());
+-  std::printf("| %s |\n", std::string(75, '=').c_str());
++  std::printf("\n| %s |\n", std::string(88, '=').c_str());
++  std::printf("| %s %s %s |\n", std::string(36, ' ').c_str(), "ROS Industrial", std::string(36, ' ').c_str());
++  std::printf("| %s %s %s |\n", std::string(32, ' ').c_str(), "TrajOpt Motion Planning", std::string(31, ' ').c_str());
++  std::printf("| %s |\n", std::string(88, '=').c_str());
+ 
+   // Print Cost and Constraint Data
+-  std::printf("| %10s | %10s | %10s | %10s | %10s | %10s | -%15s \n",
++  std::printf("| %10s | %10s | %10s | %10s | %10s | %10s | %10s |\n",
+               "merit",
+               "oldexact",
+               "new_exact",
++              "new_approx",
+               "dapprox",
+               "dexact",
+-              "ratio",
+-              "");
+-  std::printf("| %s | COSTS\n", std::string(75, '-').c_str());
++              "ratio");
++  std::printf("| %s | COSTS\n", std::string(88, '-').c_str());
+   for (size_t i = 0; i < old_cost_vals.size(); ++i)
+   {
+     double approx_improve = old_cost_vals[i] - model_cost_vals[i];
+     double exact_improve = old_cost_vals[i] - new_cost_vals[i];
+     if (fabs(approx_improve) > 1e-8)
+-      std::printf("| %10s | %10.3e | %10.3e | %10.3e | %10.3e | %10.3e | %-15s \n",
++      std::printf("| %10s | %10.3e | %10.3e | %10.3e | %10.3e | %10.3e | %10.3e | %-15s \n",
+                   "----------",
+                   old_cost_vals[i],
+                   new_cost_vals[i],
++                  model_cost_vals[i],
+                   approx_improve,
+                   exact_improve,
+                   exact_improve / approx_improve,
+                   cost_names[i].c_str());
+     else
+-      std::printf("| %10s | %10.3e | %10.3e | %10.3e | %10.3e | %10s | %-15s \n",
++      std::printf("| %10s | %10.3e | %10.3e | %10.3e | %10.3e | %10.3e | %10s | %-15s \n",
+                   "----------",
+                   old_cost_vals[i],
+                   new_cost_vals[i],
++                  model_cost_vals[i],
+                   approx_improve,
+                   exact_improve,
+-                  "  ------  ",
++                  "----------",
+                   cost_names[i].c_str());
+   }
+-  std::printf("| %s |\n", std::string(75, '=').c_str());
+-  std::printf("| %10s | %10.3e | %10.3e | %10s | %10s | %10s | SUM COSTS \n",
++  std::printf("| %s |\n", std::string(88, '=').c_str());
++  std::printf("| %10s | %10.3e | %10.3e | %10.3e | %10s | %10s | %10s | SUM COSTS\n",
+               "----------",
+               vecSum(old_cost_vals),
+               vecSum(new_cost_vals),
+-              "  ------  ",
+-              "  ------  ",
+-              "  ------  ");
+-  std::printf("| %s |\n", std::string(75, '=').c_str());
++              vecSum(model_cost_vals),
++              "----------",
++              "----------",
++              "----------");
++  std::printf("| %s |\n", std::string(88, '=').c_str());
+ 
+   if (!cnt_names.empty())
+   {
+-    std::printf("| %s | CONSTRAINTS\n", std::string(75, '-').c_str());
++    std::printf("| %s | CONSTRAINTS\n", std::string(88, '-').c_str());
+     for (size_t i = 0; i < old_cnt_viols.size(); ++i)
+     {
+       double approx_improve = old_cnt_viols[i] - model_cnt_viols[i];
+       double exact_improve = old_cnt_viols[i] - new_cnt_viols[i];
+       if (fabs(approx_improve) > 1e-8)
+-        std::printf("| %10.3e | %10.3e | %10.3e | %10.3e | %10.3e | %10.3e | %-15s \n",
++        std::printf("| %10.3e | %10.3e | %10.3e | %10.3e | %10.3e | %10.3e | %10.3e | %-15s \n",
+                     merit_error_coeffs[i],
+                     merit_error_coeffs[i] * old_cnt_viols[i],
+                     merit_error_coeffs[i] * new_cnt_viols[i],
++                    merit_error_coeffs[i] * model_cnt_viols[i],
+                     merit_error_coeffs[i] * approx_improve,
+                     merit_error_coeffs[i] * exact_improve,
+                     exact_improve / approx_improve,
+                     cnt_names[i].c_str());
+       else
+-        std::printf("| %10.3e | %10.3e | %10.3e | %10.3e | %10.3e | %10s | %-15s \n",
++        std::printf("| %10.3e | %10.3e | %10.3e | %10.3e | %10.3e | %10.3e | %10s | %-15s \n",
+                     merit_error_coeffs[i],
+                     merit_error_coeffs[i] * old_cnt_viols[i],
+                     merit_error_coeffs[i] * new_cnt_viols[i],
++                    merit_error_coeffs[i] * model_cnt_viols[i],
+                     merit_error_coeffs[i] * approx_improve,
+                     merit_error_coeffs[i] * exact_improve,
+-                    "  ------  ",
++                    "----------",
+                     cnt_names[i].c_str());
+     }
+   }
+-  std::printf("| %s |\n", std::string(75, '=').c_str());
+-  std::printf("| %10s | %10.3e | %10.3e | %10s | %10s | %10s | SUM CONSTRAINTS (WITHOUT MERIT) \n",
++  std::printf("| %s |\n", std::string(88, '=').c_str());
++  std::printf("| %10s | %10.3e | %10.3e | %10.3e | %10s | %10s | %10s | SUM CONSTRAINTS (WITHOUT MERIT) \n",
+               "----------",
+               vecSum(old_cnt_viols),
+               vecSum(new_cnt_viols),
+-              "  ------  ",
+-              "  ------  ",
+-              "  ------  ");
+-  std::printf("| %s |\n", std::string(75, '=').c_str());
+-  std::printf("| %10s | %10.3e | %10.3e | %10.3e | %10.3e | %10.3e | TOTAL = SUM COSTS + SUM CONSTRAINTS (WITH "
++              vecSum(model_cnt_viols),
++              "----------",
++              "----------",
++              "----------");
++  std::printf("| %s |\n", std::string(88, '=').c_str());
++  std::printf("| %10s | %10.3e | %10.3e | %10s | %10.3e | %10.3e | %10.3e | TOTAL = SUM COSTS + SUM CONSTRAINTS (WITH "
+               "MERIT)\n",
+               "----------",
+               old_merit,
+               new_merit,
++              "----------",
+               approx_merit_improve,
+               exact_merit_improve,
+               merit_improve_ratio);
+-  std::printf("| %s |\n", std::string(75, '=').c_str());
++  std::printf("| %s |\n", std::string(88, '=').c_str());
+ }
+ 
+ void BasicTrustRegionSQPResults::writeSolver(std::FILE* stream, bool header) const
+diff --git a/trajopt_sco/src/osqp_interface.cpp b/trajopt_sco/src/osqp_interface.cpp
+index 0425386..c94f424 100644
+--- a/trajopt_sco/src/osqp_interface.cpp
++++ b/trajopt_sco/src/osqp_interface.cpp
+@@ -15,7 +15,7 @@ TRAJOPT_IGNORE_WARNINGS_POP
+ 
+ namespace sco
+ {
+-const double OSQP_INFINITY = std::numeric_limits<double>::infinity();
++const double OSQP_INFINITY = OSQP_INFTY;
+ const bool OSQP_COMPARE_DEBUG_MODE = false;
+ 
+ OSQPModelConfig::OSQPModelConfig()
+@@ -343,8 +343,8 @@ CvxOptStatus OSQPModel::optimize()
+     {
+       Eigen::IOFormat format(5);
+       Eigen::Map<Eigen::VectorXd> solution_vec(solution_.data(), static_cast<Eigen::Index>(solution_.size()));
+-      std::cout << "OSQP Solution: " << solution_vec.transpose().format(format) << std::endl;
+       std::cout << "OSQP Status Value: " << status << std::endl;
++      std::cout << "OSQP Solution: " << solution_vec.transpose().format(format) << std::endl;
+     }
+ 
+     if (status == OSQP_SOLVED || status == OSQP_SOLVED_INACCURATE)
+diff --git a/trajopt_sco/src/solver_interface.cpp b/trajopt_sco/src/solver_interface.cpp
+index 5574b6c..def6506 100644
+--- a/trajopt_sco/src/solver_interface.cpp
++++ b/trajopt_sco/src/solver_interface.cpp
+@@ -288,6 +288,7 @@ std::vector<ModelType> availableSolvers()
+ 
+ Model::Ptr createModel(ModelType model_type, const ModelConfig::ConstPtr& model_config)
+ {
++  UNUSED(model_config);
+ #ifdef HAVE_GUROBI
+   extern Model::Ptr createGurobiModel();
+ #endif
+diff --git a/trajopt_sco/test/CMakeLists.txt b/trajopt_sco/test/CMakeLists.txt
+index 3584393..8ef0171 100644
+--- a/trajopt_sco/test/CMakeLists.txt
++++ b/trajopt_sco/test/CMakeLists.txt
+@@ -46,7 +46,7 @@ target_link_libraries(
+   GTest::Main
+   ${PROJECT_NAME})
+ if(osqp_FOUND)
+-  target_link_libraries(${PROJECT_NAME}-test osqp::osqpstatic)
++  target_link_libraries(${PROJECT_NAME}-test osqp::osqp)
+ endif()
+ target_compile_options(${PROJECT_NAME}-test PRIVATE ${TRAJOPT_COMPILE_OPTIONS_PRIVATE}
+                                                     ${TRAJOPT_COMPILE_OPTIONS_PUBLIC})

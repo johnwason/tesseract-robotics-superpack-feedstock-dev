@@ -1,49 +1,37 @@
-{% set version = "0.6.0" %}
-{% set ros_industrial_cmake_boilerplate_version = "0.3.0" %}
-{% set opw_kinematics_version = "0.4.4" %}
-{% set tesseract_version = "0.13.0" %}
-{% set tesseract_planning_version = "0.12.0" %}
-{% set trajopt_version = "0.3.0" %}
-{% set descartes_light_version = "0.3.1" %}
+{% set version = "0.8.0" %}
+{% set ros_industrial_cmake_boilerplate_version = "0.5.3" %}
+{% set opw_kinematics_version = "0.5.0" %}
+{% set tesseract_version = "0.21.5" %}
+{% set tesseract_planning_version = "0.21.6" %}
+{% set trajopt_version = "0.7.2" %}
+{% set descartes_light_version = "0.4.2" %}
+{% set ruckig_version = "0.12.2" %}
 
 package:
   name: tesseract-robotics-superpack
   version: {{ version }}
 
 source:
-  - git_url: https://github.com/ros-industrial/ros_industrial_cmake_boilerplate.git
-    git_rev: {{ ros_industrial_cmake_boilerplate_version }}
+  - url: https://github.com/ros-industrial/ros_industrial_cmake_boilerplate/archive/refs/tags/{{ ros_industrial_cmake_boilerplate_version }}.tar.gz
     folder: src/ros_industrial_cmake_boilerplate
-  - git_url: https://github.com/Jmeyer1292/opw_kinematics.git
+  - url: https://github.com/Jmeyer1292/opw_kinematics/archive/refs/tags/{{ opw_kinematics_version }}.tar.gz
     folder: src/opw_kinematics
-    git_rev: {{ opw_kinematics_version }}
-    patches:
-      - opw_interface_fix.patch
-  - git_url: https://github.com/swri-robotics/descartes_light.git
-    folder: src/descartes_light
-    git_rev: {{ descartes_light_version }}
-    patches:
-      - descartes_cpp17.patch
-  - git_url: https://github.com/johnwason/tesseract
-    git_rev: pr/BulletLibsAbsPath
+  - url: https://github.com/tesseract-robotics/tesseract/archive/refs/tags/{{ tesseract_version }}.tar.gz
     folder: src/tesseract
-    patches:
-      - tesseract_boost_fix.patch
-  - git_url: https://github.com/tesseract-robotics/trajopt.git
+  - url: https://github.com/tesseract-robotics/trajopt/archive/refs/tags/{{ trajopt_version }}.tar.gz
     folder: src/trajopt
-    git_rev: {{ trajopt_version }}
     patches:
-      - trajopt_fix.patch
-  - git_url: https://github.com/tesseract-robotics/tesseract_planning.git
+      - trajopt-patch.patch
+  - url: https://github.com/swri-robotics/descartes_light/archive/refs/tags/{{ descartes_light_version }}.tar.gz
+    folder: src/descartes_light
+  - url: https://github.com/tesseract-robotics/tesseract_planning/archive/refs/tags/{{ tesseract_planning_version }}.tar.gz
     folder: src/tesseract_planning
-    git_rev: 0c0983699f4afab3251daae6665bc0c9336f97f0
+  - url: https://github.com/pantor/ruckig/archive/refs/tags/v{{ ruckig_version }}.tar.gz
+    folder: src/ruckig
     patches:
-      - tesseract_planning_boost_fix.patch
-  - git_url: https://github.com/tesseract-robotics/tesseract_python.git
-    folder: src/tesseract_python
-    git_rev: d802447fa3e86f3aa1edf55fa919f348cbc2db90
-    patches:
-       - tesseract_python_fix.patch
+      - ruckig-install-header-files.patch
+  - url: https://github.com/johnwason/tesseract_python-1/archive/refs/heads/update_dec_2023_1.tar.gz
+    folder: src
 
 requirements:
   build:
@@ -122,7 +110,7 @@ test:
 
 build:
   skip: true # [py<38]
-  number: 1
+  number: 0
 
 about:
   home: https://github.com/ros-industrial-consortium/tesseract

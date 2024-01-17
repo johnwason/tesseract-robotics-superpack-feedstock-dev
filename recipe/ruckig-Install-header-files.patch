@@ -1,0 +1,30 @@
+From ce3ddb755da2133e809c126cd53ae82cd1248bcf Mon Sep 17 00:00:00 2001
+From: John Wason <wason@wasontech.com>
+Date: Tue, 16 Jan 2024 17:55:18 -0500
+Subject: [PATCH] Install header files
+
+---
+ CMakeLists.txt | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index bd561c2..b95e34d 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -135,6 +135,13 @@ install(FILES
+   DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/${PROJECT_NAME}
+ )
+ 
++install(
++  DIRECTORY include/ruckig
++  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
++  FILES_MATCHING
++  PATTERN "*.h"
++  PATTERN "*.hpp"
++)
+ 
+ if(BUILD_TESTS)
+   enable_testing()
+-- 
+2.43.0.windows.1
+
