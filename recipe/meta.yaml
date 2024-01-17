@@ -43,7 +43,7 @@ requirements:
     - ninja # [win]
     - make # [linux]
     - pkg-config
-    - swig
+    - swig ==4.1.1
     - colcon-common-extensions 
     - lcov
     - {{ cdt('mesa-libgl-devel') }}    # [linux]
@@ -105,8 +105,13 @@ requirements:
 test:
   files:
     - test_tesseract_task_composer.py
+    - run_test_tesseract_python.sh # [unix]
+    - run_test_tesseract_python.bat # [win]
   requires:
     - pytest
+  commands:
+    - run_test_tesseract_python.sh # [unix]
+    - run_test_tesseract_python.bat # [win]
 
 build:
   skip: true # [py<38]
