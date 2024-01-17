@@ -1,10 +1,6 @@
 github:
   user_or_org: tesseract-robotics
 
-channels:
-  targets:
-    - ["tesseract-robotics", "main"]
-
 provider:
   linux: github_actions
   osx: None

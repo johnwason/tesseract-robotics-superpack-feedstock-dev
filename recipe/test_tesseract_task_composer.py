@@ -4,7 +4,7 @@ import os
 import numpy as np
 import numpy.testing as nptest
 
-from tesseract_robotics.tesseract_common import ResourceLocator, SimpleLocatedResource
+from tesseract_robotics.tesseract_common import ResourceLocator, SimpleLocatedResource, GeneralResourceLocator
 from tesseract_robotics.tesseract_environment import Environment
 from tesseract_robotics.tesseract_common import FilesystemPath, Isometry3d, Translation3d, Quaterniond, \
     ManipulatorInfo, AnyPoly, AnyPoly_wrap_double
@@ -17,33 +17,20 @@ from tesseract_robotics.tesseract_command_language import CartesianWaypoint, Way
         MoveInstructionPoly_wrap_MoveInstruction, StateWaypointPoly_wrap_StateWaypoint, \
         CartesianWaypointPoly_wrap_CartesianWaypoint, JointWaypointPoly_wrap_JointWaypoint
 
-class TesseractSupportResourceLocator(ResourceLocator):
-    def __init__(self):
-        super().__init__()
-    
-    def locateResource(self, url):
-        try:
-            try:
-                if os.path.exists(url):
-                    return SimpleLocatedResource(url, url, self)
-            except:
-                pass
-            url_match = re.match(r"^package:\/\/tesseract_support\/(.*)$",url)
-            if (url_match is None):
-                print("url_match failed")
-                return None
-            if not "TESSERACT_SUPPORT_DIR" in os.environ:
-                return None
-            tesseract_support = os.environ["TESSERACT_SUPPORT_DIR"]
-            filename = os.path.join(tesseract_support, os.path.normpath(url_match.group(1)))
-            ret = SimpleLocatedResource(url, filename, self)
-            return ret
-        except:
-            traceback.print_exc()
-
+# from tesseract_robotics.tesseract_motion_planners import PlannerRequest, PlannerResponse, generateInterpolatedProgram
+# from tesseract_robotics.tesseract_motion_planners_ompl import OMPLDefaultPlanProfile, RRTConnectConfigurator, \
+#     OMPLProblemGeneratorFn, OMPLMotionPlanner, ProfileDictionary_addProfile_OMPLPlanProfile
+# from tesseract_robotics.tesseract_time_parameterization import TimeOptimalTrajectoryGeneration, \
+#     InstructionsTrajectory
+# from tesseract_robotics.tesseract_motion_planners_trajopt import TrajOptDefaultPlanProfile, TrajOptDefaultCompositeProfile, \
+#     TrajOptProblemGeneratorFn, TrajOptMotionPlanner, ProfileDictionary_addProfile_TrajOptPlanProfile, \
+#     ProfileDictionary_addProfile_TrajOptCompositeProfile
 from tesseract_robotics.tesseract_task_composer import TaskComposerPluginFactory, \
-    TaskComposerDataStorage, TaskComposerInput, PlanningTaskComposerProblemUPtr, \
-    PlanningTaskComposerProblemUPtr_as_TaskComposerProblemUPtr
+    TaskComposerDataStorage, TaskComposerContext, PlanningTaskComposerProblem
+
+from tesseract_robotics import tesseract_common
+
+tesseract_common.setLogLevel(tesseract_common.CONSOLE_BRIDGE_LOG_DEBUG)
 
 OMPL_DEFAULT_NAMESPACE = "OMPLMotionPlannerTask"
 TRAJOPT_DEFAULT_NAMESPACE = "TrajOptMotionPlannerTask"
@@ -51,8 +38,9 @@ TRAJOPT_DEFAULT_NAMESPACE = "TrajOptMotionPlannerTask"
 TESSERACT_SUPPORT_DIR = os.environ["TESSERACT_SUPPORT_DIR"]
 TESSERACT_TASK_COMPOSER_DIR = os.environ["TESSERACT_TASK_COMPOSER_DIR"]
 
+locator = GeneralResourceLocator()
+
 def get_environment():
-    locator = TesseractSupportResourceLocator()
     env = Environment()
     tesseract_support = os.environ["TESSERACT_SUPPORT_DIR"]
     urdf_path = FilesystemPath(os.path.join(tesseract_support, "urdf/lbr_iiwa_14_r820.urdf"))
@@ -90,38 +78,40 @@ def freespace_example_progam_iiwa(manipulator_info, goal = None, composite_profi
 
 
 def test_task_composer_trajopt_example():
+
+    planning_task_problem = None
+    output_program = None
+    future = None
+    task_executor = None
+    task = None
+
     env, manip_info = get_environment()
 
-    config_path = FilesystemPath(os.path.join(TESSERACT_TASK_COMPOSER_DIR, "config/task_composer_plugins.yaml"))
+    config_path = FilesystemPath(os.path.join(TESSERACT_TASK_COMPOSER_DIR, "config/task_composer_plugins_no_trajopt_ifopt.yaml"))
     factory = TaskComposerPluginFactory(config_path)
 
     task = factory.createTaskComposerNode("TrajOptPipeline")
+    print("trajopt task name: " + task.getName())
     
-    input_key = task.getInputKeys()[0]
     output_key = task.getOutputKeys()[0]
 
     profiles = ProfileDictionary()
 
     program = freespace_example_progam_iiwa(manip_info)
 
-    program_anypoly = AnyPoly_wrap_CompositeInstruction(program)
-    task_data = TaskComposerDataStorage()
-    task_data.setData(input_key, program_anypoly)
+    problem_input = AnyPoly_wrap_CompositeInstruction(program)
 
-    planning_task_problem = PlanningTaskComposerProblemUPtr.make_unique(env, task_data, profiles)
-    task_problem = PlanningTaskComposerProblemUPtr_as_TaskComposerProblemUPtr(planning_task_problem)
-
-    task_input = TaskComposerInput(task_problem)
-    
+    planning_task_problem = PlanningTaskComposerProblem(env, profiles)
+    planning_task_problem.input = problem_input
 
     task_executor = factory.createTaskComposerExecutor("TaskflowExecutor")
 
     output_program = None
     try:
-        future = task_executor.run(task.get(), task_input)
+        future = task_executor.run(task.get(), planning_task_problem)
         future.wait()
 
-        output_program = AnyPoly_as_CompositeInstruction(task_input.data_storage.getData(output_key))
+        output_program = AnyPoly_as_CompositeInstruction(future.context.data_storage.getData(output_key))
         assert len(output_program) == 11
 
         # Print out the output program
@@ -139,10 +129,9 @@ def test_task_composer_trajopt_example():
     finally:
 
         # Cleanup memory to prevent segfault on exit
-        del task_problem
-        del task_input
+        del planning_task_problem
         del output_program
         del future
-        del task_data
         del task_executor
         del task
+    

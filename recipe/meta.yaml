@@ -104,7 +104,7 @@ requirements:
 
 test:
   files:
-    - test_planning_server.py
+    - test_tesseract_task_composer.py
   requires:
     - pytest
 
