@@ -110,7 +110,7 @@ test:
   requires:
     - pytest
   commands:
-    - run_test_tesseract_python.sh # [unix]
+    - ./run_test_tesseract_python.sh # [unix]
     - run_test_tesseract_python.bat # [win]
 
 build:
