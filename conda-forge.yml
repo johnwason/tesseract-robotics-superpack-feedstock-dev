@@ -3,7 +3,7 @@ github:
 
 provider:
   linux: github_actions
-  osx: None
+  osx: github_actions
   win: github_actions
   linux_aarch64: None
   linux_ppc64le: None
